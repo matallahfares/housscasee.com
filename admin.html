@@ -504,7 +504,7 @@
                         </div>
                     </div>
                     <div class="flex items-center gap-2 shrink-0">
-                        <button onclick='openProductModal(${JSON.stringify(p)})' aria-label="Modifier" class="w-10 h-10 rounded-xl border border-line flex items-center justify-center text-muted hover:text-[var(--accent2)] hover:border-[var(--accent2)] transition"><i data-lucide="edit-3" class="w-4 h-4"></i></button>
+                        <button onclick='openProductModal(${JSON.stringify(p).replace(/'/g, "&#39;")})' aria-label="Modifier" class="w-10 h-10 rounded-xl border border-line flex items-center justify-center text-muted hover:text-[var(--accent2)] hover:border-[var(--accent2)] transition"><i data-lucide="edit-3" class="w-4 h-4"></i></button>
                         <button onclick="deleteProduct('${esc(p.id)}')" aria-label="Supprimer" class="w-10 h-10 rounded-xl border border-line flex items-center justify-center text-muted hover:text-red-500 hover:border-red-500 transition"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
                     </div>
                 </article>`).join("");
