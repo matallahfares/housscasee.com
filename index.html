@@ -41,16 +41,15 @@
     </script>
 
     <style>
-        /* ====== PALETTE (modifie ces couleurs pour changer tout le site) ====== */
         :root {
             --bg: #F7F0E6;
             --surface: #FFFFFF;
             --surface2: #EFE4D4;
             --ink: #2A1B12;
             --muted: #7A6652;
-            --accent: #8A5A34;      /* caramel / moka */
+            --accent: #8A5A34;
             --accent-ink: #FFFFFF;
-            --accent2: #E0457B;     /* rose néon */
+            --accent2: #E0457B;
             --line: rgba(90, 60, 35, .16);
             --glow: rgba(224, 69, 123, .25);
             --shadow: 0 20px 50px -20px rgba(80, 50, 25, .35);
@@ -86,7 +85,6 @@
         .border-line { border-color: var(--line); }
         .bg-accent { background: var(--accent); color: var(--accent-ink); }
 
-        /* Fond animé */
         .blob {
             position: absolute; border-radius: 9999px; filter: blur(80px);
             opacity: .55; pointer-events: none; will-change: transform;
@@ -97,17 +95,14 @@
         @keyframes drift1 { 0%,100% { transform: translate(0,0) scale(1); } 50% { transform: translate(-60px, 50px) scale(1.15); } }
         @keyframes drift2 { 0%,100% { transform: translate(0,0) scale(1); } 50% { transform: translate(70px, -40px) scale(1.1); } }
 
-        /* Grain léger */
         .grain::after {
             content: ""; position: fixed; inset: 0; pointer-events: none; z-index: 60; opacity: .05;
             background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
         }
 
-        /* Apparition au scroll */
         .reveal { opacity: 0; transform: translateY(32px) scale(.98); transition: opacity .8s cubic-bezier(.2,.7,.2,1), transform .8s cubic-bezier(.2,.7,.2,1); transition-delay: var(--d, 0ms); }
         .reveal.in { opacity: 1; transform: none; }
 
-        /* Titre dégradé animé */
         .grad-text {
             background: linear-gradient(100deg, var(--accent), var(--accent2), var(--accent));
             background-size: 200% auto;
@@ -116,20 +111,16 @@
         }
         @keyframes shine { to { background-position: 200% center; } }
 
-        /* Flottement */
         .float-a { animation: floatA 6s ease-in-out infinite; }
         .float-b { animation: floatB 7s ease-in-out infinite; }
         @keyframes floatA { 0%,100% { transform: translateY(0) rotate(-3deg); } 50% { transform: translateY(-14px) rotate(-1deg); } }
         @keyframes floatB { 0%,100% { transform: translateY(0) rotate(4deg); } 50% { transform: translateY(12px) rotate(2deg); } }
 
-        /* Marquee */
         .marquee { display: flex; width: max-content; animation: marquee 28s linear infinite; }
         .marquee:hover { animation-play-state: paused; }
         @keyframes marquee { to { transform: translateX(-50%); } }
 
-        /* Carte produit avec inclinaison 3D */
         .tilt { transform-style: preserve-3d; transition: transform .25s ease, box-shadow .3s ease, border-color .3s ease; }
-        .tilt-inner { transform: translateZ(30px); }
         .card-glow::before {
             content: ""; position: absolute; inset: 0; border-radius: inherit; pointer-events: none; opacity: 0;
             background: radial-gradient(400px circle at var(--mx, 50%) var(--my, 50%), var(--glow), transparent 45%);
@@ -137,11 +128,9 @@
         }
         .card-glow:hover::before { opacity: 1; }
 
-        /* Skeleton */
         .skeleton { background: linear-gradient(90deg, var(--surface2) 25%, var(--surface) 50%, var(--surface2) 75%); background-size: 200% 100%; animation: sk 1.4s infinite; }
         @keyframes sk { to { background-position: -200% 0; } }
 
-        /* Bouton brillant */
         .btn-shine { position: relative; overflow: hidden; }
         .btn-shine::after {
             content: ""; position: absolute; top: 0; left: -120%; width: 60%; height: 100%;
@@ -150,31 +139,26 @@
         }
         .btn-shine:hover::after { left: 140%; }
 
-        /* Bascule soleil / lune */
         .theme-btn .sun, .theme-btn .moon { position: absolute; transition: transform .6s cubic-bezier(.5,1.6,.4,1), opacity .4s ease; }
         .dark .theme-btn .sun { transform: rotate(0) scale(1); opacity: 1; }
         .dark .theme-btn .moon { transform: rotate(-90deg) scale(0); opacity: 0; }
         html:not(.dark) .theme-btn .sun { transform: rotate(90deg) scale(0); opacity: 0; }
         html:not(.dark) .theme-btn .moon { transform: rotate(0) scale(1); opacity: 1; }
 
-        /* Badge panier */
         .bump { animation: bump .45s cubic-bezier(.3,1.8,.5,1); }
         @keyframes bump { 0% { transform: scale(1); } 50% { transform: scale(1.6); } 100% { transform: scale(1); } }
 
-        /* Toast */
         .toast { transform: translateY(30px) scale(.95); opacity: 0; animation: toastIn .45s cubic-bezier(.2,.9,.3,1.2) forwards; }
         .toast.out { animation: toastOut .35s ease forwards; }
         @keyframes toastIn { to { transform: none; opacity: 1; } }
         @keyframes toastOut { to { transform: translateY(20px) scale(.95); opacity: 0; } }
 
-        /* Curseur lumineux */
         #cursor-glow {
             position: fixed; width: 380px; height: 380px; border-radius: 9999px; pointer-events: none; z-index: 1;
             background: radial-gradient(circle, var(--glow), transparent 65%);
             transform: translate(-50%, -50%); transition: opacity .3s ease; opacity: 0;
         }
 
-        /* Scrollbar */
         ::-webkit-scrollbar { width: 10px; }
         ::-webkit-scrollbar-track { background: var(--bg); }
         ::-webkit-scrollbar-thumb { background: var(--accent); border-radius: 10px; border: 2px solid var(--bg); }
@@ -194,17 +178,14 @@
 
     <div id="cursor-glow"></div>
 
-    <!-- Fond décoratif -->
     <div class="fixed inset-0 overflow-hidden -z-0 pointer-events-none">
         <div class="blob blob-1"></div>
         <div class="blob blob-2"></div>
         <div class="blob blob-3"></div>
     </div>
 
-    <!-- Barre de progression -->
     <div id="progress" class="fixed top-0 left-0 h-[3px] z-[70]" style="width:0; background: linear-gradient(90deg, var(--accent), var(--accent2));"></div>
 
-    <!-- Navbar -->
     <header id="nav" class="fixed top-4 inset-x-0 z-40 px-4 transition-all duration-500">
         <div class="max-w-6xl mx-auto h-16 px-4 sm:px-6 flex items-center justify-between rounded-2xl border border-line backdrop-blur-xl shadow-lg"
              style="background: color-mix(in srgb, var(--surface) 78%, transparent);">
@@ -221,14 +202,12 @@
             </nav>
 
             <div class="flex items-center gap-2">
-                <!-- Bouton mode clair / sombre -->
                 <button onclick="toggleTheme()" aria-label="Changer le thème"
                         class="theme-btn relative w-11 h-11 rounded-xl bg-surface2 border border-line text-accent flex items-center justify-center hover:scale-105 active:scale-90 transition-transform">
                     <i data-lucide="sun" class="sun w-5 h-5"></i>
                     <i data-lucide="moon" class="moon w-5 h-5"></i>
                 </button>
 
-                <!-- Bouton panier -->
                 <button id="cart-btn" onclick="toggleCart()" aria-label="Ouvrir le panier"
                         class="relative w-11 h-11 rounded-xl bg-surface2 border border-line text-accent flex items-center justify-center hover:scale-105 active:scale-90 transition-transform">
                     <i data-lucide="shopping-bag" class="w-5 h-5"></i>
@@ -241,7 +220,6 @@
 
     <main class="relative z-10">
 
-        <!-- HERO -->
         <section class="relative pt-40 pb-24 px-4 sm:px-6">
             <div class="max-w-6xl mx-auto grid lg:grid-cols-2 gap-14 items-center">
 
@@ -280,7 +258,6 @@
                     </div>
                 </div>
 
-                <!-- Visuel -->
                 <div class="reveal relative" style="--d:200ms">
                     <div class="absolute -inset-6 rounded-[2.5rem] opacity-60 blur-3xl" style="background: radial-gradient(circle at 30% 30%, var(--glow), transparent 60%);"></div>
 
@@ -306,7 +283,6 @@
             </div>
         </section>
 
-        <!-- MARQUEE -->
         <section class="py-6 border-y border-line overflow-hidden" style="background: color-mix(in srgb, var(--surface) 60%, transparent);">
             <div class="marquee font-script text-3xl sm:text-4xl text-muted">
                 <div class="flex items-center gap-10 pr-10 shrink-0">
@@ -318,7 +294,6 @@
             </div>
         </section>
 
-        <!-- POURQUOI NOUS -->
         <section id="about" class="py-24 px-4 sm:px-6">
             <div class="max-w-6xl mx-auto">
                 <div class="text-center max-w-2xl mx-auto mb-14">
@@ -346,7 +321,6 @@
             </div>
         </section>
 
-        <!-- CATALOGUE -->
         <section id="shop" class="py-24 px-4 sm:px-6">
             <div class="max-w-6xl mx-auto">
                 <div class="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-12">
@@ -365,7 +339,6 @@
             </div>
         </section>
 
-        <!-- CONTACT / CTA -->
         <section id="contact" class="py-24 px-4 sm:px-6">
             <div class="reveal max-w-5xl mx-auto relative overflow-hidden rounded-[2rem] p-10 sm:p-16 text-center border border-line"
                  style="background: linear-gradient(135deg, var(--surface2), var(--surface)); box-shadow: var(--shadow);">
@@ -383,13 +356,11 @@
         </section>
     </main>
 
-    <!-- FOOTER -->
     <footer class="relative z-10 border-t border-line py-10 text-center text-sm text-muted">
         <div class="font-script text-3xl text-[var(--ink)] mb-1">housscase</div>
         <p>© 2026 HousseCase. Tous droits réservés. Faite par Matallah Fares.</p>
     </footer>
 
-    <!-- PANIER -->
     <div id="cart-drawer" class="fixed inset-0 z-50 pointer-events-none opacity-0 transition-opacity duration-300">
         <div onclick="toggleCart()" class="absolute inset-0 bg-black/60 backdrop-blur-sm"></div>
         <aside id="drawer-content" class="absolute right-0 top-0 h-full w-full max-w-md p-6 flex flex-col translate-x-full transition-transform duration-500 pointer-events-auto border-l border-line"
@@ -418,29 +389,19 @@
         </aside>
     </div>
 
-    <!-- Toasts -->
     <div id="toasts" class="fixed bottom-5 left-1/2 -translate-x-1/2 z-[80] flex flex-col items-center gap-2 pointer-events-none"></div>
 
     <script>
         /* ================= CONFIG SUPABASE ================= */
-        const SUPABASE_URL = "YOUR_SUPABASE_URL";
-        const SUPABASE_ANON_KEY = "YOUR_SUPABASE_ANON_KEY";
+        const SUPABASE_URL = "https://kfptjsdkurcronaiwhtu.supabase.co";
+        const SUPABASE_ANON_KEY = "sb_publishable_sMNgngHYK60xe3gcJbpEig_9Fy9J2Kl";
         const SUPABASE_READY = !SUPABASE_URL.includes("YOUR_") && !SUPABASE_ANON_KEY.includes("YOUR_");
         const sb = SUPABASE_READY ? window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY) : null;
-
-        /* Produits de démonstration (affichés tant que Supabase n'est pas configuré) */
-        const DEMO_PRODUCTS = [
-            { id: "d1", name: "Night City", description: "Coque transparente, vue nocturne de Times Square.", price: 1200, old_price: 1600 },
-            { id: "d2", name: "Library Mood", description: "Ambiance bibliothèque chaleureuse, finition soft.", price: 1200 },
-            { id: "d3", name: "Waiting Rooftop", description: "Coucher de soleil sur les toits, bords renforcés.", price: 1300, old_price: 1700 },
-            { id: "d4", name: "Neon Scroll", description: "Néons roses et violets pour les noctambules.", price: 1300 }
-        ];
 
         let products = [];
         let cart = [];
         try { cart = JSON.parse(localStorage.getItem("cart") || "[]"); } catch (e) { cart = []; }
 
-        /* ================= OUTILS ================= */
         const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
         const fmt = (n) => new Intl.NumberFormat("fr-FR").format(n);
         const icons = () => window.lucide && lucide.createIcons();
@@ -455,14 +416,12 @@
             setTimeout(() => { el.classList.add("out"); setTimeout(() => el.remove(), 350); }, 2600);
         }
 
-        /* ================= THEME ================= */
         function toggleTheme() {
             const html = document.documentElement;
             const dark = html.classList.toggle("dark");
             try { localStorage.setItem("theme", dark ? "dark" : "light"); } catch (e) {}
         }
 
-        /* ================= PRODUITS ================= */
         function skeletons() {
             document.getElementById("products-container").innerHTML = Array.from({ length: 4 }).map(() => `
                 <div class="rounded-3xl p-4 bg-surface border border-line">
@@ -476,8 +435,7 @@
         async function fetchProducts() {
             skeletons();
             if (!SUPABASE_READY) {
-                await new Promise((r) => setTimeout(r, 600));
-                products = DEMO_PRODUCTS;
+                products = [];
                 renderProducts();
                 return;
             }
@@ -497,7 +455,7 @@
             const box = document.getElementById("products-container");
 
             if (!products.length) {
-                box.innerHTML = `<p class="col-span-full text-center py-16 text-muted">Aucun produit disponible pour le moment.</p>`;
+                box.innerHTML = `<p class="col-span-full text-center py-16 text-muted">Aucun produit disponible pour le moment. Connecte-toi à l'admin pour en ajouter.</p>`;
                 return;
             }
             if (!list.length) {
@@ -538,7 +496,6 @@
             bindTilt();
         }
 
-        /* ================= PANIER ================= */
         function saveCart() { try { localStorage.setItem("cart", JSON.stringify(cart)); } catch (e) {} }
 
         function addToCart(id) {
@@ -619,12 +576,13 @@
                 phone: document.getElementById("client-phone").value.trim(),
                 wilaya: document.getElementById("client-wilaya").value.trim(),
                 total_price: cart.reduce((s, i) => s + i.price * i.qty, 0),
+                items: cart,
                 status: "En attente"
             };
 
             let error = null;
             if (SUPABASE_READY) ({ error } = await sb.from("orders").insert([order]));
-            else await new Promise((r) => setTimeout(r, 700)); // mode démo
+            else await new Promise((r) => setTimeout(r, 700));
 
             btn.disabled = false; btn.textContent = old;
 
@@ -637,7 +595,6 @@
             document.getElementById("order-form").reset();
         }
 
-        /* ================= ANIMATIONS ================= */
         let io;
         function observeReveals() {
             if (!io) {
@@ -694,7 +651,6 @@
         });
         document.addEventListener("mouseleave", () => (glow.style.opacity = 0));
 
-        /* ================= INIT ================= */
         window.addEventListener("load", () => {
             icons();
             observeReveals();
