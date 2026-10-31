@@ -448,11 +448,11 @@
             }
             const { data, error } = await sb.from("products").select("*").order("created_at", { ascending: false });
             if (error || !data) {
-                document.getElementById("products-container").innerHTML =
-                    `<p class="col-span-full text-center py-16 text-red-500">Erreur lors du chargement des produits.</p>`;
+                products = DEMO_PRODUCTS; // Utilise la démo si la table est vide ou inaccessible
+                renderProducts();
                 return;
             }
-            products = data;
+            products = data.length ? data : DEMO_PRODUCTS;
             renderProducts();
         }
 
@@ -589,7 +589,7 @@
             btn.disabled = true;
             btn.innerText = "Validation en cours...";
 
-            if (SUPABASE_READY) {
+            if (SUPABASE_READY && sb) {
                 const { error } = await sb.from("orders").insert([{
                     client_name: name,
                     phone: phone,
