@@ -274,8 +274,8 @@
     <script>
         /* ================= CONFIG ================= */
         const SUPABASE_URL = "https://kfptjsdkurcronaiwhtu.supabase.co";
-        const SUPABASE_ANON_KEY = "sb_publishable_sMNgngHYK60xe3gcJbpEig_9Fy9J2K1";
-        const ADMIN_EMAIL = "admin@housscase.com";       // doit être le même que dans supabase-setup.sql
+        const SUPABASE_ANON_KEY = "sb_publishable_sMNgngHYK60xe3gcJbpEig_9Fy9J2Kl";
+        const ADMIN_EMAIL = "admin@housscase.com";
         const BUCKET = "product-images";
 
         const READY = !SUPABASE_URL.includes("YOUR_") && !SUPABASE_ANON_KEY.includes("YOUR_");
@@ -361,7 +361,7 @@
             ]);
             ic?.classList.remove("spin");
 
-            if (o.error) toast("Impossible de charger les commandes (vérifie le script SQL).", "err");
+            if (o.error) toast("Impossible de charger les commandes.", "err");
             if (p.error) toast("Impossible de charger les produits.", "err");
             orders = o.data || []; products = p.data || [];
             renderStats(); renderChips(); renderOrders(); renderProducts();
@@ -463,17 +463,18 @@
 
         async function updateStatus(id, status) {
             const { error } = await sb.from("orders").update({ status }).eq("id", id);
-            if (error) return toast("Erreur lors de la mise à jour.", "err");
-            const o = orders.find((x) => String(x.id) === String(id)); if (o) o.status = status;
-            renderStats(); renderChips(); renderOrders();
-            toast(`Statut : ${status}`);
+            if (error) { toast("Erreur lors de la mise à jour.", "err"); return; }
+            const o = orders.find(x => x.id === id);
+            if (o) o.status = status;
+            renderStats(); renderChips();
+            toast("Statut mis à jour");
         }
 
         async function deleteOrder(id) {
-            if (!confirm("Supprimer cette commande définitivement ?")) return;
+            if (!confirm("Supprimer cette commande ?")) return;
             const { error } = await sb.from("orders").delete().eq("id", id);
-            if (error) return toast("Suppression impossible.", "err");
-            orders = orders.filter((o) => String(o.id) !== String(id));
+            if (error) { toast("Erreur lors de la suppression.", "err"); return; }
+            orders = orders.filter(x => x.id !== id);
             renderStats(); renderChips(); renderOrders();
             toast("Commande supprimée");
         }
@@ -481,147 +482,138 @@
         /* ================= PRODUITS ================= */
         function renderProducts() {
             const q = ($("product-search")?.value || "").trim().toLowerCase();
-            const list = products.filter((p) => !q || String(p.name || "").toLowerCase().includes(q));
+            const list = products.filter((p) => !q || (p.name || "").toLowerCase().includes(q) || (p.description || "").toLowerCase().includes(q));
             const box = $("products-list");
             if (!list.length) {
-                box.innerHTML = `<div class="text-center py-20 text-muted"><i data-lucide="package-open" class="w-12 h-12 mx-auto mb-3 opacity-40"></i>Aucun produit. Clique sur « Ajouter un produit ».</div>`;
+                box.innerHTML = `<div class="text-center py-20 text-muted"><i data-lucide="package" class="w-12 h-12 mx-auto mb-3 opacity-40"></i>Aucun produit.</div>`;
                 return icons();
             }
-            box.innerHTML = list.map((p, i) => {
-                const id = esc(p.id);
-                const img = p.image_url
-                    ? `<img src="${esc(p.image_url)}" alt="" class="w-full h-full object-cover">`
-                    : `<i data-lucide="smartphone" class="w-7 h-7 text-muted"></i>`;
-                return `
-                <article class="fade-up p-4 rounded-2xl bg-surface border border-line hover:border-[var(--accent2)] transition-colors flex flex-col md:flex-row md:items-center gap-4" style="--d:${Math.min(i, 8) * 40}ms">
-                    <div class="flex items-center gap-4 flex-1 min-w-0">
-                        <div class="w-16 h-16 rounded-xl bg-surface2 border border-line overflow-hidden flex items-center justify-center shrink-0">${img}</div>
+            box.innerHTML = list.map((p, i) => `
+                <article class="fade-up p-4 rounded-2xl bg-surface border border-line flex items-center justify-between gap-4" style="--d:${Math.min(i, 8) * 40}ms">
+                    <div class="flex items-center gap-4 min-w-0">
+                        <div class="w-16 h-16 rounded-xl bg-surface2 border border-line overflow-hidden shrink-0 flex items-center justify-center">
+                            ${p.image_url ? `<img src="${esc(p.image_url)}" class="w-full h-full object-cover">` : `<i data-lucide="smartphone" class="w-6 h-6 text-accent"></i>`}
+                        </div>
                         <div class="min-w-0">
-                            <h4 class="font-bold truncate">${esc(p.name)}</h4>
-                            <p class="text-xs text-muted line-clamp-1">${esc(p.description || "—")}</p>
+                            <h4 class="font-extrabold text-base truncate">${esc(p.name)}</h4>
+                            <p class="text-xs text-muted truncate mt-0.5">${esc(p.description)}</p>
+                            <div class="flex items-center gap-3 mt-1.5 font-bold text-sm text-accent">
+                                ${fmt(p.price)} DZD
+                                ${p.old_price ? `<span class="text-xs text-muted line-through font-normal">${fmt(p.old_price)} DZD</span>` : ''}
+                            </div>
                         </div>
                     </div>
-                    <div class="flex items-end gap-3 flex-wrap">
-                        <div>
-                            <label class="block text-[10px] font-bold text-muted uppercase tracking-wider mb-1">Prix</label>
-                            <input type="number" min="0" value="${esc(p.price)}" data-id="${id}" data-field="price" data-orig="${esc(p.price)}" oninput="markDirty(this)" class="field w-28 px-3 py-2.5 rounded-xl text-sm font-bold">
-                        </div>
-                        <div>
-                            <label class="block text-[10px] font-bold text-muted uppercase tracking-wider mb-1">Ancien prix</label>
-                            <input type="number" min="0" value="${p.old_price ?? ""}" placeholder="—" data-id="${id}" data-field="old_price" data-orig="${p.old_price ?? ""}" oninput="markDirty(this)" class="field w-28 px-3 py-2.5 rounded-xl text-sm">
-                        </div>
-                        <button id="save-${id}" onclick="quickSave('${id}')" class="hidden-view btn-shine px-4 h-10 rounded-xl text-sm font-bold bg-accent active:scale-95 transition-transform flex items-center gap-1.5"><i data-lucide="check" class="w-4 h-4"></i>Enregistrer</button>
-                        <button onclick="openProductModal('${id}')" aria-label="Modifier" class="w-10 h-10 rounded-xl border border-line flex items-center justify-center text-muted hover:text-[var(--accent2)] hover:border-[var(--accent2)] active:scale-90 transition"><i data-lucide="pencil" class="w-4 h-4"></i></button>
-                        <button onclick="deleteProduct('${id}')" aria-label="Supprimer" class="w-10 h-10 rounded-xl border border-line flex items-center justify-center text-muted hover:text-red-500 hover:border-red-500 active:scale-90 transition"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
+                    <div class="flex items-center gap-2 shrink-0">
+                        <button onclick='openProductModal(${JSON.stringify(p)})' aria-label="Modifier" class="w-10 h-10 rounded-xl border border-line flex items-center justify-center text-muted hover:text-[var(--accent2)] hover:border-[var(--accent2)] transition"><i data-lucide="edit-3" class="w-4 h-4"></i></button>
+                        <button onclick="deleteProduct('${esc(p.id)}')" aria-label="Supprimer" class="w-10 h-10 rounded-xl border border-line flex items-center justify-center text-muted hover:text-red-500 hover:border-red-500 transition"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
                     </div>
-                </article>`;
-            }).join("");
+                </article>`).join("");
             icons();
         }
 
-        function markDirty(input) {
-            const id = input.dataset.id;
-            const row = input.closest("article");
-            const inputs = row.querySelectorAll("input[data-id]");
-            let dirty = false;
-            inputs.forEach((i) => { const d = i.value !== i.dataset.orig; i.classList.toggle("dirty", d); if (d) dirty = true; });
-            const btn = $("save-" + id);
-            dirty ? btn.classList.remove("hidden-view") : btn.classList.add("hidden-view");
-        }
-
-        async function quickSave(id) {
-            const row = document.querySelector(`#save-${CSS.escape(id)}`).closest("article");
-            const price = Number(row.querySelector('[data-field="price"]').value);
-            const oldRaw = row.querySelector('[data-field="old_price"]').value;
-            if (!(price >= 0) || row.querySelector('[data-field="price"]').value === "") return toast("Prix invalide.", "err");
-            const payload = { price, old_price: oldRaw === "" ? null : Number(oldRaw) };
-            const { error } = await sb.from("products").update(payload).eq("id", id);
-            if (error) return toast("Erreur lors de l'enregistrement.", "err");
-            const p = products.find((x) => String(x.id) === String(id)); if (p) Object.assign(p, payload);
-            renderProducts(); toast("Prix mis à jour");
-        }
-
-        async function deleteProduct(id) {
-            const p = products.find((x) => String(x.id) === String(id));
-            if (!confirm(`Supprimer « ${p?.name || "ce produit"} » ?`)) return;
-            const { error } = await sb.from("products").delete().eq("id", id);
-            if (error) return toast("Suppression impossible.", "err");
-            products = products.filter((x) => String(x.id) !== String(id));
-            renderStats(); renderProducts(); toast("Produit supprimé");
-        }
-
-        /* ---- Modal ---- */
-        function setPreview(url) {
-            $("p-preview").innerHTML = url ? `<img src="${esc(url)}" class="w-full h-full object-cover" onerror="this.remove()">` : `<i data-lucide="image" class="w-7 h-7"></i>`;
-            icons();
-        }
-        function previewFile() { const f = $("p-file").files[0]; if (f) setPreview(URL.createObjectURL(f)); }
-        function previewUrl() { setPreview($("p-url").value.trim()); }
-
-        function openProductModal(id) {
-            const p = id ? products.find((x) => String(x.id) === String(id)) : null;
-            $("modal-title").textContent = p ? "Modifier le produit" : "Nouveau produit";
+        function openProductModal(p = null) {
             $("p-id").value = p ? p.id : "";
-            $("p-name").value = p?.name || "";
-            $("p-desc").value = p?.description || "";
-            $("p-price").value = p?.price ?? "";
-            $("p-old").value = p?.old_price ?? "";
-            $("p-url").value = p?.image_url || "";
+            $("p-name").value = p ? p.name : "";
+            $("p-desc").value = p ? (p.description || "") : "";
+            $("p-price").value = p ? p.price : "";
+            $("p-old").value = p ? (p.old_price || "") : "";
+            $("p-url").value = p ? (p.image_url || "") : "";
             $("p-file").value = "";
-            setPreview(p?.image_url || "");
-            show($("modal")); icons();
-            setTimeout(() => $("p-name").focus(), 50);
+            const prev = $("p-preview");
+            if (p && p.image_url) {
+                prev.innerHTML = `<img src="${esc(p.image_url)}" class="w-full h-full object-cover">`;
+            } else {
+                prev.innerHTML = `<i data-lucide="image" class="w-7 h-7"></i>`;
+            }
+            $("modal-title").textContent = p ? "Modifier le produit" : "Nouveau produit";
+            show($("modal"));
+            icons();
         }
+
         function closeProductModal() { hide($("modal")); }
-        document.addEventListener("keydown", (e) => { if (e.key === "Escape") closeProductModal(); });
+
+        function previewUrl() {
+            const url = $("p-url").value.trim();
+            const prev = $("p-preview");
+            if (url) {
+                prev.innerHTML = `<img src="${esc(url)}" class="w-full h-full object-cover" onerror="this.onerror=null;this.parentNode.innerHTML='<i data-lucide=\\'image\\' class=\\'w-7 h-7\\'></i>';icons();">`;
+            } else {
+                prev.innerHTML = `<i data-lucide="image" class="w-7 h-7"></i>`;
+            }
+            icons();
+        }
+
+        function previewFile() {
+            const file = $("p-file").files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                $("p-preview").innerHTML = `<img src="${e.target.result}" class="w-full h-full object-cover">`;
+                $("p-url").value = "";
+                icons();
+            };
+            reader.readAsDataURL(file);
+        }
 
         async function saveProduct(e) {
             e.preventDefault();
-            const btn = $("p-submit"); const old = btn.textContent;
-            btn.disabled = true; btn.textContent = "Enregistrement...";
-            try {
-                let image_url = $("p-url").value.trim() || null;
-                const file = $("p-file").files[0];
-                if (file) {
-                    const ext = (file.name.split(".").pop() || "jpg").toLowerCase().replace(/[^a-z0-9]/g, "");
-                    const path = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`;
-                    const up = await sb.storage.from(BUCKET).upload(path, file, { cacheControl: "3600", upsert: false });
-                    if (up.error) throw new Error("Téléversement de l'image impossible (bucket manquant ?).");
-                    image_url = sb.storage.from(BUCKET).getPublicUrl(path).data.publicUrl;
-                }
-                const oldRaw = $("p-old").value;
-                const payload = {
-                    name: $("p-name").value.trim(),
-                    description: $("p-desc").value.trim() || null,
-                    price: Number($("p-price").value),
-                    old_price: oldRaw === "" ? null : Number(oldRaw),
-                    image_url
-                };
-                const id = $("p-id").value;
-                const res = id
-                    ? await sb.from("products").update(payload).eq("id", id).select().single()
-                    : await sb.from("products").insert([payload]).select().single();
-                if (res.error) throw new Error(res.error.message);
+            const id = $("p-id").value;
+            const name = $("p-name").value.trim();
+            const description = $("p-desc").value.trim();
+            const price = Number($("p-price").value);
+            const old_price = $("p-old").value ? Number($("p-old").value) : null;
+            let image_url = $("p-url").value.trim();
 
-                if (id) products = products.map((x) => (String(x.id) === String(id) ? res.data : x));
-                else products.unshift(res.data);
-                renderStats(); renderProducts(); closeProductModal();
-                toast(id ? "Produit modifié" : "Produit ajouté");
-            } catch (err) {
-                toast(err.message || "Erreur.", "err");
-            } finally {
-                btn.disabled = false; btn.textContent = old;
+            const btn = $("p-submit"); btn.disabled = true; btn.textContent = "Enregistrement...";
+
+            const file = $("p-file").files[0];
+            if (file) {
+                const ext = file.name.split('.').pop();
+                const path = `prod_${Date.now()}.${ext}`;
+                const { error: upErr } = await sb.storage.from(BUCKET).upload(path, file);
+                if (upErr) {
+                    toast("Erreur lors de l'upload de l'image.", "err");
+                    btn.disabled = false; btn.textContent = "Enregistrer";
+                    return;
+                }
+                const { data: pub } = sb.storage.from(BUCKET).getPublicUrl(path);
+                image_url = pub.publicUrl;
             }
+
+            const payload = { name, description, price, old_price, image_url };
+            let err = null;
+
+            if (id) {
+                const { error } = await sb.from("products").update(payload).eq("id", id);
+                err = error;
+            } else {
+                const { error } = await sb.from("products").insert([payload]);
+                err = error;
+            }
+
+            btn.disabled = false; btn.textContent = "Enregistrer";
+
+            if (err) {
+                toast("Erreur lors de l'enregistrement du produit.", "err");
+                return;
+            }
+
+            toast(id ? "Produit modifié avec succès" : "Produit ajouté avec succès");
+            closeProductModal();
+            refreshAll();
         }
 
-        /* ================= INIT ================= */
-        window.addEventListener("load", async () => {
+        async function deleteProduct(id) {
+            if (!confirm("Supprimer ce produit ?")) return;
+            const { error } = await sb.from("products").delete().eq("id", id);
+            if (error) { toast("Erreur lors de la suppression.", "err"); return; }
+            products = products.filter(x => x.id !== id);
+            renderStats(); renderProducts();
+            toast("Produit supprimé");
+        }
+
+        window.addEventListener("DOMContentLoaded", () => {
             icons();
-            $("login-email").value = ADMIN_EMAIL;
-            if (!READY) { show($("config-warning")); return; }
-            const { data } = await sb.auth.getSession();
-            const email = (data.session?.user?.email || "").toLowerCase();
-            if (email && email === ADMIN_EMAIL.toLowerCase()) enterApp();
         });
     </script>
 </body>
