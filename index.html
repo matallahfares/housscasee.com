@@ -351,8 +351,6 @@
         const SUPABASE_ANON_KEY = "sb_publishable_sMNgngHYK60xe3gcJbpEig_9Fy9J2Kl";
         const sb = window.supabase ? window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY) : null;
 
-     const DEMO_PRODUCTS = [];
-        
         let products = [];
         let cart = [];
         try { cart = JSON.parse(localStorage.getItem("cart") || "[]"); } catch (e) { cart = []; }
@@ -379,19 +377,19 @@
 
         async function fetchProducts() {
             if (!sb) {
-                products = DEMO_PRODUCTS;
+                products = [];
                 renderProducts();
                 return;
             }
             try {
                 const { data, error } = await sb.from("products").select("*").order("created_at", { ascending: false });
-                if (!error && data && data.length > 0) {
+                if (!error && data) {
                     products = data;
                 } else {
-                    products = DEMO_PRODUCTS;
+                    products = [];
                 }
             } catch (e) {
-                products = DEMO_PRODUCTS;
+                products = [];
             }
             renderProducts();
         }
@@ -402,6 +400,10 @@
             const box = document.getElementById("products-container");
             if (!box) return;
 
+            if (!products.length) {
+                box.innerHTML = `<p class="col-span-full text-center py-16 text-muted">Aucun produit disponible pour le moment. Connecte-toi à l'admin pour en ajouter.</p>`;
+                return;
+            }
             if (!list.length) {
                 box.innerHTML = `<p class="col-span-full text-center py-16 text-muted">Aucun résultat pour « ${esc(q)} ».</p>`;
                 return;
