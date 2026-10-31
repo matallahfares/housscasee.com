@@ -1,0 +1,709 @@
+<!DOCTYPE html>
+<html lang="fr" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HousseCase | More than just a case</title>
+    <meta name="description" content="Coques de téléphone au design unique. HousseCase, plus qu'une simple coque.">
+    <link rel="icon" type="image/jpeg" href="housscase_.jpg">
+
+    <!-- Appliquer le thème avant l'affichage (évite le flash blanc) -->
+    <script>
+        (function () {
+            try {
+                var t = localStorage.getItem('theme');
+                var prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+                if (t === 'dark' || (!t && (prefersDark || true))) document.documentElement.classList.add('dark');
+                if (t === 'light') document.documentElement.classList.remove('dark');
+            } catch (e) { document.documentElement.classList.add('dark'); }
+        })();
+    </script>
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Caveat:wght@600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['"Plus Jakarta Sans"', 'system-ui', 'sans-serif'],
+                        script: ['Caveat', 'cursive']
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        /* ====== PALETTE (modifie ces couleurs pour changer tout le site) ====== */
+        :root {
+            --bg: #F7F0E6;
+            --surface: #FFFFFF;
+            --surface2: #EFE4D4;
+            --ink: #2A1B12;
+            --muted: #7A6652;
+            --accent: #8A5A34;      /* caramel / moka */
+            --accent-ink: #FFFFFF;
+            --accent2: #E0457B;     /* rose néon */
+            --line: rgba(90, 60, 35, .16);
+            --glow: rgba(224, 69, 123, .25);
+            --shadow: 0 20px 50px -20px rgba(80, 50, 25, .35);
+        }
+        .dark {
+            --bg: #120E0B;
+            --surface: #1D1611;
+            --surface2: #271D16;
+            --ink: #F6EDE0;
+            --muted: #B9A48D;
+            --accent: #D9AE7E;
+            --accent-ink: #1A110B;
+            --accent2: #FF5FA2;
+            --line: rgba(217, 174, 126, .18);
+            --glow: rgba(255, 95, 162, .28);
+            --shadow: 0 25px 60px -20px rgba(0, 0, 0, .8);
+        }
+
+        * { -webkit-tap-highlight-color: transparent; }
+        html { scroll-behavior: smooth; }
+        body {
+            background: var(--bg);
+            color: var(--ink);
+            transition: background-color .5s ease, color .5s ease;
+            overflow-x: hidden;
+        }
+        ::selection { background: var(--accent2); color: #fff; }
+
+        .bg-surface { background: var(--surface); }
+        .bg-surface2 { background: var(--surface2); }
+        .text-muted { color: var(--muted); }
+        .text-accent { color: var(--accent); }
+        .border-line { border-color: var(--line); }
+        .bg-accent { background: var(--accent); color: var(--accent-ink); }
+
+        /* Fond animé */
+        .blob {
+            position: absolute; border-radius: 9999px; filter: blur(80px);
+            opacity: .55; pointer-events: none; will-change: transform;
+        }
+        .blob-1 { width: 420px; height: 420px; background: var(--accent2); top: -120px; right: -80px; animation: drift1 16s ease-in-out infinite; opacity: .28; }
+        .blob-2 { width: 480px; height: 480px; background: var(--accent); bottom: -160px; left: -140px; animation: drift2 20s ease-in-out infinite; opacity: .35; }
+        .blob-3 { width: 300px; height: 300px; background: #7c5cff; top: 40%; left: 45%; animation: drift1 24s ease-in-out infinite reverse; opacity: .18; }
+        @keyframes drift1 { 0%,100% { transform: translate(0,0) scale(1); } 50% { transform: translate(-60px, 50px) scale(1.15); } }
+        @keyframes drift2 { 0%,100% { transform: translate(0,0) scale(1); } 50% { transform: translate(70px, -40px) scale(1.1); } }
+
+        /* Grain léger */
+        .grain::after {
+            content: ""; position: fixed; inset: 0; pointer-events: none; z-index: 60; opacity: .05;
+            background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
+        }
+
+        /* Apparition au scroll */
+        .reveal { opacity: 0; transform: translateY(32px) scale(.98); transition: opacity .8s cubic-bezier(.2,.7,.2,1), transform .8s cubic-bezier(.2,.7,.2,1); transition-delay: var(--d, 0ms); }
+        .reveal.in { opacity: 1; transform: none; }
+
+        /* Titre dégradé animé */
+        .grad-text {
+            background: linear-gradient(100deg, var(--accent), var(--accent2), var(--accent));
+            background-size: 200% auto;
+            -webkit-background-clip: text; background-clip: text; color: transparent;
+            animation: shine 6s linear infinite;
+        }
+        @keyframes shine { to { background-position: 200% center; } }
+
+        /* Flottement */
+        .float-a { animation: floatA 6s ease-in-out infinite; }
+        .float-b { animation: floatB 7s ease-in-out infinite; }
+        @keyframes floatA { 0%,100% { transform: translateY(0) rotate(-3deg); } 50% { transform: translateY(-14px) rotate(-1deg); } }
+        @keyframes floatB { 0%,100% { transform: translateY(0) rotate(4deg); } 50% { transform: translateY(12px) rotate(2deg); } }
+
+        /* Marquee */
+        .marquee { display: flex; width: max-content; animation: marquee 28s linear infinite; }
+        .marquee:hover { animation-play-state: paused; }
+        @keyframes marquee { to { transform: translateX(-50%); } }
+
+        /* Carte produit avec inclinaison 3D */
+        .tilt { transform-style: preserve-3d; transition: transform .25s ease, box-shadow .3s ease, border-color .3s ease; }
+        .tilt-inner { transform: translateZ(30px); }
+        .card-glow::before {
+            content: ""; position: absolute; inset: 0; border-radius: inherit; pointer-events: none; opacity: 0;
+            background: radial-gradient(400px circle at var(--mx, 50%) var(--my, 50%), var(--glow), transparent 45%);
+            transition: opacity .3s ease;
+        }
+        .card-glow:hover::before { opacity: 1; }
+
+        /* Skeleton */
+        .skeleton { background: linear-gradient(90deg, var(--surface2) 25%, var(--surface) 50%, var(--surface2) 75%); background-size: 200% 100%; animation: sk 1.4s infinite; }
+        @keyframes sk { to { background-position: -200% 0; } }
+
+        /* Bouton brillant */
+        .btn-shine { position: relative; overflow: hidden; }
+        .btn-shine::after {
+            content: ""; position: absolute; top: 0; left: -120%; width: 60%; height: 100%;
+            background: linear-gradient(120deg, transparent, rgba(255,255,255,.45), transparent);
+            transform: skewX(-20deg); transition: left .8s ease;
+        }
+        .btn-shine:hover::after { left: 140%; }
+
+        /* Bascule soleil / lune */
+        .theme-btn .sun, .theme-btn .moon { position: absolute; transition: transform .6s cubic-bezier(.5,1.6,.4,1), opacity .4s ease; }
+        .dark .theme-btn .sun { transform: rotate(0) scale(1); opacity: 1; }
+        .dark .theme-btn .moon { transform: rotate(-90deg) scale(0); opacity: 0; }
+        html:not(.dark) .theme-btn .sun { transform: rotate(90deg) scale(0); opacity: 0; }
+        html:not(.dark) .theme-btn .moon { transform: rotate(0) scale(1); opacity: 1; }
+
+        /* Badge panier */
+        .bump { animation: bump .45s cubic-bezier(.3,1.8,.5,1); }
+        @keyframes bump { 0% { transform: scale(1); } 50% { transform: scale(1.6); } 100% { transform: scale(1); } }
+
+        /* Toast */
+        .toast { transform: translateY(30px) scale(.95); opacity: 0; animation: toastIn .45s cubic-bezier(.2,.9,.3,1.2) forwards; }
+        .toast.out { animation: toastOut .35s ease forwards; }
+        @keyframes toastIn { to { transform: none; opacity: 1; } }
+        @keyframes toastOut { to { transform: translateY(20px) scale(.95); opacity: 0; } }
+
+        /* Curseur lumineux */
+        #cursor-glow {
+            position: fixed; width: 380px; height: 380px; border-radius: 9999px; pointer-events: none; z-index: 1;
+            background: radial-gradient(circle, var(--glow), transparent 65%);
+            transform: translate(-50%, -50%); transition: opacity .3s ease; opacity: 0;
+        }
+
+        /* Scrollbar */
+        ::-webkit-scrollbar { width: 10px; }
+        ::-webkit-scrollbar-track { background: var(--bg); }
+        ::-webkit-scrollbar-thumb { background: var(--accent); border-radius: 10px; border: 2px solid var(--bg); }
+
+        input::placeholder { color: var(--muted); opacity: .7; }
+        .field { background: var(--surface2); border: 1px solid var(--line); color: var(--ink); transition: border-color .25s, box-shadow .25s; }
+        .field:focus { outline: none; border-color: var(--accent2); box-shadow: 0 0 0 4px var(--glow); }
+
+        @media (prefers-reduced-motion: reduce) {
+            *, *::before, *::after { animation: none !important; transition: none !important; }
+            .reveal { opacity: 1; transform: none; }
+        }
+    </style>
+</head>
+
+<body class="font-sans antialiased grain">
+
+    <div id="cursor-glow"></div>
+
+    <!-- Fond décoratif -->
+    <div class="fixed inset-0 overflow-hidden -z-0 pointer-events-none">
+        <div class="blob blob-1"></div>
+        <div class="blob blob-2"></div>
+        <div class="blob blob-3"></div>
+    </div>
+
+    <!-- Barre de progression -->
+    <div id="progress" class="fixed top-0 left-0 h-[3px] z-[70]" style="width:0; background: linear-gradient(90deg, var(--accent), var(--accent2));"></div>
+
+    <!-- Navbar -->
+    <header id="nav" class="fixed top-4 inset-x-0 z-40 px-4 transition-all duration-500">
+        <div class="max-w-6xl mx-auto h-16 px-4 sm:px-6 flex items-center justify-between rounded-2xl border border-line backdrop-blur-xl shadow-lg"
+             style="background: color-mix(in srgb, var(--surface) 78%, transparent);">
+
+            <a href="#" class="flex items-center gap-3 group">
+                <img src="housscase_.jpg" alt="Logo HousseCase" class="w-10 h-10 rounded-xl object-cover border border-line group-hover:rotate-12 group-hover:scale-110 transition-transform duration-500">
+                <span class="font-script text-3xl font-bold leading-none">housscase</span>
+            </a>
+
+            <nav class="hidden md:flex items-center gap-8 text-sm font-semibold text-muted">
+                <a href="#about" class="hover:text-[var(--accent2)] transition-colors">Pourquoi nous</a>
+                <a href="#shop" class="hover:text-[var(--accent2)] transition-colors">Catalogue</a>
+                <a href="#contact" class="hover:text-[var(--accent2)] transition-colors">Contact</a>
+            </nav>
+
+            <div class="flex items-center gap-2">
+                <!-- Bouton mode clair / sombre -->
+                <button onclick="toggleTheme()" aria-label="Changer le thème"
+                        class="theme-btn relative w-11 h-11 rounded-xl bg-surface2 border border-line text-accent flex items-center justify-center hover:scale-105 active:scale-90 transition-transform">
+                    <i data-lucide="sun" class="sun w-5 h-5"></i>
+                    <i data-lucide="moon" class="moon w-5 h-5"></i>
+                </button>
+
+                <!-- Bouton panier -->
+                <button id="cart-btn" onclick="toggleCart()" aria-label="Ouvrir le panier"
+                        class="relative w-11 h-11 rounded-xl bg-surface2 border border-line text-accent flex items-center justify-center hover:scale-105 active:scale-90 transition-transform">
+                    <i data-lucide="shopping-bag" class="w-5 h-5"></i>
+                    <span id="cart-count" class="absolute -top-1.5 -right-1.5 min-w-[20px] h-5 px-1 rounded-full text-[11px] font-extrabold flex items-center justify-center"
+                          style="background: var(--accent2); color:#fff;">0</span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <main class="relative z-10">
+
+        <!-- HERO -->
+        <section class="relative pt-40 pb-24 px-4 sm:px-6">
+            <div class="max-w-6xl mx-auto grid lg:grid-cols-2 gap-14 items-center">
+
+                <div class="space-y-7">
+                    <div class="reveal inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-line bg-surface text-xs font-bold uppercase tracking-[.2em] text-accent">
+                        <span class="relative flex h-2 w-2">
+                            <span class="animate-ping absolute inline-flex h-full w-full rounded-full opacity-75" style="background: var(--accent2)"></span>
+                            <span class="relative inline-flex rounded-full h-2 w-2" style="background: var(--accent2)"></span>
+                        </span>
+                        Collection 2026
+                    </div>
+
+                    <h1 class="reveal text-5xl sm:text-6xl xl:text-7xl font-extrabold leading-[1.02] tracking-tight" style="--d:100ms">
+                        Plus qu'une <span class="grad-text">simple coque.</span>
+                    </h1>
+
+                    <p class="reveal text-lg text-muted max-w-lg leading-relaxed" style="--d:200ms">
+                        Des designs qui racontent une histoire, une protection transparente et solide, et une finition soignée.
+                        Fais de ton téléphone ton style.
+                    </p>
+
+                    <div class="reveal flex flex-wrap gap-4" style="--d:300ms">
+                        <a href="#shop" class="btn-shine inline-flex items-center gap-3 px-8 py-4 rounded-2xl font-bold bg-accent shadow-xl hover:scale-105 active:scale-95 transition-transform"
+                           style="box-shadow: 0 15px 35px -10px var(--glow);">
+                            Explorer le catalogue <i data-lucide="arrow-right" class="w-5 h-5"></i>
+                        </a>
+                        <a href="#about" class="inline-flex items-center gap-2 px-8 py-4 rounded-2xl font-bold border border-line bg-surface hover:border-[var(--accent2)] transition-colors">
+                            En savoir plus
+                        </a>
+                    </div>
+
+                    <div class="reveal grid grid-cols-3 gap-6 pt-6 max-w-md" style="--d:400ms">
+                        <div><div class="text-3xl font-extrabold"><span data-count="58">0</span></div><div class="text-xs text-muted mt-1">Wilayas livrées</div></div>
+                        <div><div class="text-3xl font-extrabold"><span data-count="100">0</span>%</div><div class="text-xs text-muted mt-1">Designs uniques</div></div>
+                        <div><div class="text-3xl font-extrabold"><span data-count="24">0</span>h</div><div class="text-xs text-muted mt-1">Préparation</div></div>
+                    </div>
+                </div>
+
+                <!-- Visuel -->
+                <div class="reveal relative" style="--d:200ms">
+                    <div class="absolute -inset-6 rounded-[2.5rem] opacity-60 blur-3xl" style="background: radial-gradient(circle at 30% 30%, var(--glow), transparent 60%);"></div>
+
+                    <div class="relative rounded-[2rem] p-3 border border-line bg-surface" style="box-shadow: var(--shadow);">
+                        <div class="relative rounded-[1.5rem] overflow-hidden aspect-square group">
+                            <img src="housscase_.jpg" alt="Collection HousseCase" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-[1500ms]">
+                            <div class="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent"></div>
+                        </div>
+                    </div>
+
+                    <div class="float-a absolute -left-4 sm:-left-10 top-10 px-4 py-3 rounded-2xl border border-line backdrop-blur-xl shadow-xl flex items-center gap-3"
+                         style="background: color-mix(in srgb, var(--surface) 85%, transparent);">
+                        <div class="w-10 h-10 rounded-xl flex items-center justify-center" style="background: var(--accent2); color:#fff;"><i data-lucide="shield-check" class="w-5 h-5"></i></div>
+                        <div><div class="text-sm font-bold">Anti-chocs</div><div class="text-xs text-muted">Protection renforcée</div></div>
+                    </div>
+
+                    <div class="float-b absolute -right-3 sm:-right-8 bottom-12 px-4 py-3 rounded-2xl border border-line backdrop-blur-xl shadow-xl flex items-center gap-3"
+                         style="background: color-mix(in srgb, var(--surface) 85%, transparent);">
+                        <div class="w-10 h-10 rounded-xl flex items-center justify-center bg-accent"><i data-lucide="truck" class="w-5 h-5"></i></div>
+                        <div><div class="text-sm font-bold">Livraison rapide</div><div class="text-xs text-muted">Partout en Algérie</div></div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- MARQUEE -->
+        <section class="py-6 border-y border-line overflow-hidden" style="background: color-mix(in srgb, var(--surface) 60%, transparent);">
+            <div class="marquee font-script text-3xl sm:text-4xl text-muted">
+                <div class="flex items-center gap-10 pr-10 shrink-0">
+                    <span>more than just a case</span><span class="text-accent">✦</span><span>design premium</span><span class="text-accent">✦</span><span>made with love</span><span class="text-accent">✦</span><span>stop scrolling</span><span class="text-accent">✦</span>
+                </div>
+                <div class="flex items-center gap-10 pr-10 shrink-0" aria-hidden="true">
+                    <span>more than just a case</span><span class="text-accent">✦</span><span>design premium</span><span class="text-accent">✦</span><span>made with love</span><span class="text-accent">✦</span><span>stop scrolling</span><span class="text-accent">✦</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- POURQUOI NOUS -->
+        <section id="about" class="py-24 px-4 sm:px-6">
+            <div class="max-w-6xl mx-auto">
+                <div class="text-center max-w-2xl mx-auto mb-14">
+                    <span class="reveal text-sm font-bold tracking-[.25em] uppercase text-accent">Pourquoi HousseCase</span>
+                    <h2 class="reveal text-3xl sm:text-5xl font-extrabold mt-3 leading-tight" style="--d:100ms">Un style qui te ressemble</h2>
+                </div>
+
+                <div class="grid md:grid-cols-3 gap-6">
+                    <div class="reveal card-glow tilt relative p-8 rounded-3xl bg-surface border border-line" style="--d:0ms">
+                        <div class="w-14 h-14 rounded-2xl flex items-center justify-center mb-5 bg-accent"><i data-lucide="palette" class="w-7 h-7"></i></div>
+                        <h3 class="text-xl font-bold mb-2">Designs originaux</h3>
+                        <p class="text-muted text-sm leading-relaxed">Des illustrations exclusives pensées pour ceux qui veulent un téléphone qui raconte quelque chose.</p>
+                    </div>
+                    <div class="reveal card-glow tilt relative p-8 rounded-3xl bg-surface border border-line" style="--d:120ms">
+                        <div class="w-14 h-14 rounded-2xl flex items-center justify-center mb-5" style="background: var(--accent2); color:#fff;"><i data-lucide="shield-check" class="w-7 h-7"></i></div>
+                        <h3 class="text-xl font-bold mb-2">Protection solide</h3>
+                        <p class="text-muted text-sm leading-relaxed">Coque transparente et bords renforcés pour absorber les chocs sans cacher la beauté de ton téléphone.</p>
+                    </div>
+                    <div class="reveal card-glow tilt relative p-8 rounded-3xl bg-surface border border-line" style="--d:240ms">
+                        <div class="w-14 h-14 rounded-2xl flex items-center justify-center mb-5 bg-accent"><i data-lucide="package-check" class="w-7 h-7"></i></div>
+                        <h3 class="text-xl font-bold mb-2">Paiement à la livraison</h3>
+                        <p class="text-muted text-sm leading-relaxed">Tu commandes en quelques secondes, tu reçois chez toi, tu paies à la réception. Simple.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- CATALOGUE -->
+        <section id="shop" class="py-24 px-4 sm:px-6">
+            <div class="max-w-6xl mx-auto">
+                <div class="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-12">
+                    <div>
+                        <span class="reveal text-sm font-bold tracking-[.25em] uppercase text-accent">Notre catalogue</span>
+                        <h2 class="reveal text-3xl sm:text-5xl font-extrabold mt-3" style="--d:100ms">Tous les articles</h2>
+                    </div>
+                    <div class="reveal relative w-full md:w-80" style="--d:150ms">
+                        <i data-lucide="search" class="w-5 h-5 absolute left-4 top-1/2 -translate-y-1/2 text-muted"></i>
+                        <input id="search" type="search" placeholder="Rechercher une coque..." oninput="renderProducts()"
+                               class="field w-full pl-12 pr-4 py-3.5 rounded-2xl text-sm">
+                    </div>
+                </div>
+
+                <div id="products-container" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6"></div>
+            </div>
+        </section>
+
+        <!-- CONTACT / CTA -->
+        <section id="contact" class="py-24 px-4 sm:px-6">
+            <div class="reveal max-w-5xl mx-auto relative overflow-hidden rounded-[2rem] p-10 sm:p-16 text-center border border-line"
+                 style="background: linear-gradient(135deg, var(--surface2), var(--surface)); box-shadow: var(--shadow);">
+                <div class="blob" style="width:260px;height:260px;background:var(--accent2);top:-90px;right:-60px;opacity:.3;"></div>
+                <div class="blob" style="width:260px;height:260px;background:var(--accent);bottom:-100px;left:-60px;opacity:.3;"></div>
+                <div class="relative">
+                    <p class="font-script text-4xl text-accent mb-2">2 minutes and i will stop scrolling.</p>
+                    <h2 class="text-3xl sm:text-5xl font-extrabold mb-5">Trouve la coque qui est faite pour toi</h2>
+                    <p class="text-muted max-w-xl mx-auto mb-8">Une question ou une demande spéciale ? Passe ta commande depuis le panier, on te rappelle pour confirmer.</p>
+                    <a href="#shop" class="btn-shine inline-flex items-center gap-3 px-8 py-4 rounded-2xl font-bold bg-accent hover:scale-105 active:scale-95 transition-transform">
+                        Commander maintenant <i data-lucide="shopping-bag" class="w-5 h-5"></i>
+                    </a>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- FOOTER -->
+    <footer class="relative z-10 border-t border-line py-10 text-center text-sm text-muted">
+        <div class="font-script text-3xl text-[var(--ink)] mb-1">housscase</div>
+        <p>© 2026 HousseCase. Tous droits réservés. Faite par Matallah Fares.</p>
+    </footer>
+
+    <!-- PANIER -->
+    <div id="cart-drawer" class="fixed inset-0 z-50 pointer-events-none opacity-0 transition-opacity duration-300">
+        <div onclick="toggleCart()" class="absolute inset-0 bg-black/60 backdrop-blur-sm"></div>
+        <aside id="drawer-content" class="absolute right-0 top-0 h-full w-full max-w-md p-6 flex flex-col translate-x-full transition-transform duration-500 pointer-events-auto border-l border-line"
+               style="background: var(--bg); transition-timing-function: cubic-bezier(.2,.8,.2,1); box-shadow: var(--shadow);">
+            <div class="flex items-center justify-between pb-4 mb-4 border-b border-line">
+                <h3 class="text-xl font-extrabold flex items-center gap-2"><i data-lucide="shopping-bag" class="text-accent"></i> Ton panier</h3>
+                <button onclick="toggleCart()" aria-label="Fermer" class="p-2 rounded-xl hover:bg-surface2 transition-colors hover:rotate-90 duration-300"><i data-lucide="x" class="w-6 h-6"></i></button>
+            </div>
+
+            <div id="cart-items" class="flex-1 overflow-y-auto space-y-3 pr-1"></div>
+
+            <div class="pt-5 mt-4 border-t border-line space-y-4">
+                <div class="flex justify-between items-center text-lg font-bold">
+                    <span class="text-muted">Total</span>
+                    <span id="cart-total" class="text-2xl text-accent">0 DZD</span>
+                </div>
+                <form id="order-form" onsubmit="handleCheckout(event)" class="space-y-3">
+                    <input type="text" id="client-name" placeholder="Nom et prénom" required class="field w-full px-4 py-3 rounded-xl text-sm">
+                    <input type="tel" id="client-phone" placeholder="Numéro de téléphone" required class="field w-full px-4 py-3 rounded-xl text-sm">
+                    <input type="text" id="client-wilaya" placeholder="Wilaya (ex: Mostaganem)" required class="field w-full px-4 py-3 rounded-xl text-sm">
+                    <button id="submit-btn" type="submit" class="btn-shine w-full py-4 rounded-xl font-bold bg-accent hover:scale-[1.02] active:scale-95 transition-transform">
+                        Confirmer la commande
+                    </button>
+                </form>
+            </div>
+        </aside>
+    </div>
+
+    <!-- Toasts -->
+    <div id="toasts" class="fixed bottom-5 left-1/2 -translate-x-1/2 z-[80] flex flex-col items-center gap-2 pointer-events-none"></div>
+
+    <script>
+        /* ================= CONFIG SUPABASE ================= */
+        const SUPABASE_URL = "YOUR_SUPABASE_URL";
+        const SUPABASE_ANON_KEY = "YOUR_SUPABASE_ANON_KEY";
+        const SUPABASE_READY = !SUPABASE_URL.includes("YOUR_") && !SUPABASE_ANON_KEY.includes("YOUR_");
+        const sb = SUPABASE_READY ? window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY) : null;
+
+        /* Produits de démonstration (affichés tant que Supabase n'est pas configuré) */
+        const DEMO_PRODUCTS = [
+            { id: "d1", name: "Night City", description: "Coque transparente, vue nocturne de Times Square.", price: 1200, old_price: 1600 },
+            { id: "d2", name: "Library Mood", description: "Ambiance bibliothèque chaleureuse, finition soft.", price: 1200 },
+            { id: "d3", name: "Waiting Rooftop", description: "Coucher de soleil sur les toits, bords renforcés.", price: 1300, old_price: 1700 },
+            { id: "d4", name: "Neon Scroll", description: "Néons roses et violets pour les noctambules.", price: 1300 }
+        ];
+
+        let products = [];
+        let cart = [];
+        try { cart = JSON.parse(localStorage.getItem("cart") || "[]"); } catch (e) { cart = []; }
+
+        /* ================= OUTILS ================= */
+        const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+        const fmt = (n) => new Intl.NumberFormat("fr-FR").format(n);
+        const icons = () => window.lucide && lucide.createIcons();
+
+        function toast(msg, type = "ok") {
+            const el = document.createElement("div");
+            el.className = "toast pointer-events-auto flex items-center gap-3 px-5 py-3 rounded-2xl border border-line backdrop-blur-xl shadow-2xl text-sm font-semibold";
+            el.style.background = "color-mix(in srgb, var(--surface) 92%, transparent)";
+            el.innerHTML = `<i data-lucide="${type === "ok" ? "check-circle-2" : "alert-circle"}" class="w-5 h-5" style="color:${type === "ok" ? "var(--accent2)" : "#ef4444"}"></i><span>${esc(msg)}</span>`;
+            document.getElementById("toasts").appendChild(el);
+            icons();
+            setTimeout(() => { el.classList.add("out"); setTimeout(() => el.remove(), 350); }, 2600);
+        }
+
+        /* ================= THEME ================= */
+        function toggleTheme() {
+            const html = document.documentElement;
+            const dark = html.classList.toggle("dark");
+            try { localStorage.setItem("theme", dark ? "dark" : "light"); } catch (e) {}
+        }
+
+        /* ================= PRODUITS ================= */
+        function skeletons() {
+            document.getElementById("products-container").innerHTML = Array.from({ length: 4 }).map(() => `
+                <div class="rounded-3xl p-4 bg-surface border border-line">
+                    <div class="skeleton aspect-square rounded-2xl mb-4"></div>
+                    <div class="skeleton h-5 w-2/3 rounded-lg mb-2"></div>
+                    <div class="skeleton h-4 w-full rounded-lg mb-4"></div>
+                    <div class="skeleton h-8 w-1/2 rounded-lg"></div>
+                </div>`).join("");
+        }
+
+        async function fetchProducts() {
+            skeletons();
+            if (!SUPABASE_READY) {
+                await new Promise((r) => setTimeout(r, 600));
+                products = DEMO_PRODUCTS;
+                renderProducts();
+                return;
+            }
+            const { data, error } = await sb.from("products").select("*").order("created_at", { ascending: false });
+            if (error || !data) {
+                document.getElementById("products-container").innerHTML =
+                    `<p class="col-span-full text-center py-16 text-red-500">Erreur lors du chargement des produits.</p>`;
+                return;
+            }
+            products = data;
+            renderProducts();
+        }
+
+        function renderProducts() {
+            const q = (document.getElementById("search")?.value || "").trim().toLowerCase();
+            const list = products.filter((p) => !q || (p.name || "").toLowerCase().includes(q) || (p.description || "").toLowerCase().includes(q));
+            const box = document.getElementById("products-container");
+
+            if (!products.length) {
+                box.innerHTML = `<p class="col-span-full text-center py-16 text-muted">Aucun produit disponible pour le moment.</p>`;
+                return;
+            }
+            if (!list.length) {
+                box.innerHTML = `<p class="col-span-full text-center py-16 text-muted">Aucun résultat pour « ${esc(q)} ».</p>`;
+                return;
+            }
+
+            box.innerHTML = list.map((p, i) => {
+                const discount = p.old_price && p.old_price > p.price ? Math.round((1 - p.price / p.old_price) * 100) : 0;
+                const img = p.image_url
+                    ? `<img src="${esc(p.image_url)}" alt="${esc(p.name)}" loading="lazy" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700">`
+                    : `<div class="w-full h-full flex items-center justify-center text-accent" style="background: linear-gradient(135deg, var(--surface2), var(--surface));"><i data-lucide="smartphone" class="w-16 h-16 opacity-60"></i></div>`;
+                return `
+                <article class="reveal group card-glow tilt relative rounded-3xl p-4 bg-surface border border-line hover:border-[var(--accent2)] flex flex-col" style="--d:${(i % 4) * 90}ms" data-tilt>
+                    <div class="relative aspect-square rounded-2xl overflow-hidden mb-4 bg-surface2">
+                        ${img}
+                        ${discount ? `<span class="absolute top-3 left-3 px-3 py-1 rounded-full text-xs font-extrabold" style="background:var(--accent2);color:#fff;">-${discount}%</span>` : ""}
+                    </div>
+                    <div class="flex-1 flex flex-col">
+                        <h3 class="font-bold text-lg group-hover:text-[var(--accent2)] transition-colors">${esc(p.name)}</h3>
+                        <p class="text-xs text-muted line-clamp-2 mt-1">${esc(p.description || "Accessoire haut de gamme.")}</p>
+                        <div class="flex items-center justify-between mt-auto pt-4">
+                            <div>
+                                <span class="text-xl font-extrabold text-accent">${fmt(p.price)} <span class="text-xs font-semibold text-muted">DZD</span></span>
+                                ${p.old_price ? `<div class="text-xs text-muted line-through">${fmt(p.old_price)} DZD</div>` : ""}
+                            </div>
+                            <button onclick="addToCart('${esc(p.id)}')" aria-label="Ajouter au panier"
+                                    class="btn-shine w-12 h-12 rounded-2xl bg-accent flex items-center justify-center hover:scale-110 hover:rotate-90 active:scale-90 transition-transform duration-300">
+                                <i data-lucide="plus" class="w-5 h-5"></i>
+                            </button>
+                        </div>
+                    </div>
+                </article>`;
+            }).join("");
+
+            icons();
+            observeReveals();
+            bindTilt();
+        }
+
+        /* ================= PANIER ================= */
+        function saveCart() { try { localStorage.setItem("cart", JSON.stringify(cart)); } catch (e) {} }
+
+        function addToCart(id) {
+            const p = products.find((x) => String(x.id) === String(id));
+            if (!p) return;
+            const ex = cart.find((i) => String(i.id) === String(id));
+            if (ex) ex.qty++; else cart.push({ id: p.id, name: p.name, price: Number(p.price), qty: 1 });
+            updateCartUI();
+            toast(`${p.name} ajouté au panier`);
+            const badge = document.getElementById("cart-count");
+            badge.classList.remove("bump"); void badge.offsetWidth; badge.classList.add("bump");
+        }
+
+        function changeQty(id, delta) {
+            const it = cart.find((i) => String(i.id) === String(id));
+            if (!it) return;
+            it.qty += delta;
+            if (it.qty <= 0) cart = cart.filter((i) => String(i.id) !== String(id));
+            updateCartUI();
+        }
+
+        function updateCartUI() {
+            const count = cart.reduce((s, i) => s + i.qty, 0);
+            const total = cart.reduce((s, i) => s + i.price * i.qty, 0);
+            document.getElementById("cart-count").textContent = count;
+            document.getElementById("cart-total").textContent = `${fmt(total)} DZD`;
+            saveCart();
+
+            const box = document.getElementById("cart-items");
+            if (!cart.length) {
+                box.innerHTML = `<div class="h-full flex flex-col items-center justify-center text-center text-muted py-16 gap-3">
+                    <i data-lucide="shopping-bag" class="w-14 h-14 opacity-40"></i><p>Ton panier est vide.</p></div>`;
+                icons();
+                return;
+            }
+            box.innerHTML = cart.map((i) => `
+                <div class="flex items-center justify-between p-4 rounded-2xl bg-surface border border-line">
+                    <div class="min-w-0 pr-3">
+                        <p class="font-bold text-sm truncate">${esc(i.name)}</p>
+                        <p class="text-xs text-accent mt-0.5">${fmt(i.price)} DZD × ${i.qty}</p>
+                    </div>
+                    <div class="flex items-center gap-1 bg-surface2 rounded-xl border border-line p-1">
+                        <button onclick="changeQty('${esc(i.id)}', -1)" class="w-8 h-8 rounded-lg font-bold hover:bg-[var(--surface)] active:scale-90 transition">−</button>
+                        <span class="w-6 text-center text-sm font-bold">${i.qty}</span>
+                        <button onclick="changeQty('${esc(i.id)}', 1)" class="w-8 h-8 rounded-lg font-bold hover:bg-[var(--surface)] active:scale-90 transition">+</button>
+                    </div>
+                </div>`).join("");
+        }
+
+        function toggleCart(forceOpen = false) {
+            const drawer = document.getElementById("cart-drawer");
+            const content = document.getElementById("drawer-content");
+            const closed = drawer.classList.contains("opacity-0");
+            if (forceOpen || closed) {
+                drawer.classList.remove("opacity-0", "pointer-events-none");
+                content.classList.remove("translate-x-full");
+                document.body.style.overflow = "hidden";
+            } else {
+                drawer.classList.add("opacity-0", "pointer-events-none");
+                content.classList.add("translate-x-full");
+                document.body.style.overflow = "";
+            }
+        }
+        document.addEventListener("keydown", (e) => {
+            if (e.key === "Escape" && !document.getElementById("cart-drawer").classList.contains("opacity-0")) toggleCart();
+        });
+
+        async function handleCheckout(e) {
+            e.preventDefault();
+            if (!cart.length) return toast("Ton panier est vide !", "err");
+
+            const btn = document.getElementById("submit-btn");
+            const old = btn.textContent;
+            btn.disabled = true; btn.textContent = "Envoi en cours...";
+
+            const order = {
+                client_name: document.getElementById("client-name").value.trim(),
+                phone: document.getElementById("client-phone").value.trim(),
+                wilaya: document.getElementById("client-wilaya").value.trim(),
+                total_price: cart.reduce((s, i) => s + i.price * i.qty, 0),
+                status: "En attente"
+            };
+
+            let error = null;
+            if (SUPABASE_READY) ({ error } = await sb.from("orders").insert([order]));
+            else await new Promise((r) => setTimeout(r, 700)); // mode démo
+
+            btn.disabled = false; btn.textContent = old;
+
+            if (error) return toast("Erreur lors de la commande.", "err");
+
+            toast("Commande envoyée ! Merci de ta confiance.");
+            cart = [];
+            updateCartUI();
+            toggleCart();
+            document.getElementById("order-form").reset();
+        }
+
+        /* ================= ANIMATIONS ================= */
+        let io;
+        function observeReveals() {
+            if (!io) {
+                io = new IntersectionObserver((entries) => {
+                    entries.forEach((en) => { if (en.isIntersecting) { en.target.classList.add("in"); io.unobserve(en.target); } });
+                }, { threshold: 0.12, rootMargin: "0px 0px -40px 0px" });
+            }
+            document.querySelectorAll(".reveal:not(.in)").forEach((el) => io.observe(el));
+        }
+
+        function bindTilt() {
+            if (window.matchMedia("(pointer: coarse)").matches) return;
+            document.querySelectorAll("[data-tilt], .tilt").forEach((card) => {
+                if (card.dataset.bound) return;
+                card.dataset.bound = "1";
+                card.addEventListener("mousemove", (e) => {
+                    const r = card.getBoundingClientRect();
+                    const x = e.clientX - r.left, y = e.clientY - r.top;
+                    const rx = ((y / r.height) - 0.5) * -8;
+                    const ry = ((x / r.width) - 0.5) * 8;
+                    card.style.transform = `perspective(900px) rotateX(${rx}deg) rotateY(${ry}deg) translateY(-6px)`;
+                    card.style.setProperty("--mx", x + "px");
+                    card.style.setProperty("--my", y + "px");
+                });
+                card.addEventListener("mouseleave", () => { card.style.transform = ""; });
+            });
+        }
+
+        function countUp() {
+            document.querySelectorAll("[data-count]").forEach((el) => {
+                const target = +el.dataset.count, dur = 1600, start = performance.now();
+                const tick = (now) => {
+                    const p = Math.min((now - start) / dur, 1);
+                    el.textContent = Math.round(target * (1 - Math.pow(1 - p, 3)));
+                    if (p < 1) requestAnimationFrame(tick);
+                };
+                requestAnimationFrame(tick);
+            });
+        }
+
+        function onScroll() {
+            const h = document.documentElement;
+            const pct = (h.scrollTop / (h.scrollHeight - h.clientHeight)) * 100;
+            document.getElementById("progress").style.width = pct + "%";
+            document.getElementById("nav").style.transform = h.scrollTop > 40 ? "translateY(-6px)" : "";
+        }
+        window.addEventListener("scroll", onScroll, { passive: true });
+
+        const glow = document.getElementById("cursor-glow");
+        window.addEventListener("mousemove", (e) => {
+            glow.style.opacity = 1;
+            glow.style.left = e.clientX + "px";
+            glow.style.top = e.clientY + "px";
+        });
+        document.addEventListener("mouseleave", () => (glow.style.opacity = 0));
+
+        /* ================= INIT ================= */
+        window.addEventListener("load", () => {
+            icons();
+            observeReveals();
+            bindTilt();
+            updateCartUI();
+            fetchProducts();
+            setTimeout(countUp, 500);
+            onScroll();
+        });
+    </script>
+</body>
+</html>

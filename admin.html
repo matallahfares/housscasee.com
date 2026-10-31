@@ -1,0 +1,628 @@
+<!DOCTYPE html>
+<html lang="fr" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="robots" content="noindex,nofollow">
+    <title>HousseCase | Administration</title>
+    <link rel="icon" type="image/jpeg" href="housscase_.jpg">
+
+    <script>
+        (function () {
+            try {
+                var t = localStorage.getItem('theme');
+                if (t === 'light') document.documentElement.classList.remove('dark');
+                else document.documentElement.classList.add('dark');
+            } catch (e) {}
+        })();
+    </script>
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Caveat:wght@600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: { extend: { fontFamily: { sans: ['"Plus Jakarta Sans"', 'system-ui', 'sans-serif'], script: ['Caveat', 'cursive'] } } }
+        }
+    </script>
+
+    <style>
+        :root {
+            --bg: #F7F0E6; --surface: #FFFFFF; --surface2: #EFE4D4; --ink: #2A1B12; --muted: #7A6652;
+            --accent: #8A5A34; --accent-ink: #FFFFFF; --accent2: #E0457B;
+            --line: rgba(90,60,35,.16); --glow: rgba(224,69,123,.25); --shadow: 0 20px 50px -20px rgba(80,50,25,.35);
+        }
+        .dark {
+            --bg: #120E0B; --surface: #1D1611; --surface2: #271D16; --ink: #F6EDE0; --muted: #B9A48D;
+            --accent: #D9AE7E; --accent-ink: #1A110B; --accent2: #FF5FA2;
+            --line: rgba(217,174,126,.18); --glow: rgba(255,95,162,.28); --shadow: 0 25px 60px -20px rgba(0,0,0,.8);
+        }
+        body { background: var(--bg); color: var(--ink); transition: background-color .5s, color .5s; }
+        ::selection { background: var(--accent2); color: #fff; }
+        .bg-surface { background: var(--surface); } .bg-surface2 { background: var(--surface2); }
+        .text-muted { color: var(--muted); } .text-accent { color: var(--accent); }
+        .border-line { border-color: var(--line); } .bg-accent { background: var(--accent); color: var(--accent-ink); }
+        .field { background: var(--surface2); border: 1px solid var(--line); color: var(--ink); transition: border-color .25s, box-shadow .25s; }
+        .field:focus { outline: none; border-color: var(--accent2); box-shadow: 0 0 0 4px var(--glow); }
+        input::placeholder, textarea::placeholder { color: var(--muted); opacity: .7; }
+        select.field option { background: var(--surface); color: var(--ink); }
+
+        .blob { position: absolute; border-radius: 9999px; filter: blur(80px); pointer-events: none; }
+        .blob-1 { width: 420px; height: 420px; background: var(--accent2); top: -120px; right: -80px; opacity: .25; animation: d1 16s ease-in-out infinite; }
+        .blob-2 { width: 460px; height: 460px; background: var(--accent); bottom: -150px; left: -130px; opacity: .3; animation: d2 20s ease-in-out infinite; }
+        @keyframes d1 { 50% { transform: translate(-60px, 50px) scale(1.15); } }
+        @keyframes d2 { 50% { transform: translate(70px, -40px) scale(1.1); } }
+
+        .fade-up { animation: fadeUp .6s cubic-bezier(.2,.8,.2,1) both; animation-delay: var(--d, 0ms); }
+        @keyframes fadeUp { from { opacity: 0; transform: translateY(18px); } to { opacity: 1; transform: none; } }
+        .pop { animation: pop .35s cubic-bezier(.2,1.2,.3,1) both; }
+        @keyframes pop { from { opacity: 0; transform: scale(.94) translateY(10px); } to { opacity: 1; transform: none; } }
+
+        .btn-shine { position: relative; overflow: hidden; }
+        .btn-shine::after { content: ""; position: absolute; top: 0; left: -120%; width: 60%; height: 100%; background: linear-gradient(120deg, transparent, rgba(255,255,255,.4), transparent); transform: skewX(-20deg); transition: left .8s; }
+        .btn-shine:hover::after { left: 140%; }
+
+        .theme-btn .sun, .theme-btn .moon { position: absolute; transition: transform .6s cubic-bezier(.5,1.6,.4,1), opacity .4s; }
+        .dark .theme-btn .sun { transform: none; opacity: 1; } .dark .theme-btn .moon { transform: rotate(-90deg) scale(0); opacity: 0; }
+        html:not(.dark) .theme-btn .sun { transform: rotate(90deg) scale(0); opacity: 0; } html:not(.dark) .theme-btn .moon { transform: none; opacity: 1; }
+
+        .tab { position: relative; transition: color .3s, background .3s; }
+        .tab.active { background: var(--accent); color: var(--accent-ink); }
+        .chip { transition: all .25s; }
+        .chip.active { background: var(--accent2); color: #fff; border-color: transparent; }
+
+        .toast { transform: translateY(30px) scale(.95); opacity: 0; animation: tin .45s cubic-bezier(.2,.9,.3,1.2) forwards; }
+        .toast.out { animation: tout .35s ease forwards; }
+        @keyframes tin { to { transform: none; opacity: 1; } } @keyframes tout { to { transform: translateY(20px); opacity: 0; } }
+
+        .skeleton { background: linear-gradient(90deg, var(--surface2) 25%, var(--surface) 50%, var(--surface2) 75%); background-size: 200% 100%; animation: sk 1.4s infinite; }
+        @keyframes sk { to { background-position: -200% 0; } }
+
+        .spin { animation: spin 1s linear infinite; } @keyframes spin { to { transform: rotate(360deg); } }
+        .dirty { box-shadow: 0 0 0 3px var(--glow); border-color: var(--accent2) !important; }
+
+        ::-webkit-scrollbar { width: 10px; height: 10px; } ::-webkit-scrollbar-track { background: var(--bg); }
+        ::-webkit-scrollbar-thumb { background: var(--accent); border-radius: 10px; border: 2px solid var(--bg); }
+        .hidden-view { display: none !important; }
+    </style>
+</head>
+
+<body class="font-sans antialiased min-h-screen">
+
+    <div class="fixed inset-0 overflow-hidden pointer-events-none"><div class="blob blob-1"></div><div class="blob blob-2"></div></div>
+
+    <!-- ============ CONNEXION ============ -->
+    <section id="login-view" class="relative z-10 min-h-screen flex items-center justify-center px-4">
+        <div class="absolute top-5 right-5">
+            <button onclick="toggleTheme()" aria-label="Thème" class="theme-btn relative w-11 h-11 rounded-xl bg-surface border border-line text-accent flex items-center justify-center hover:scale-105 active:scale-90 transition-transform">
+                <i data-lucide="sun" class="sun w-5 h-5"></i><i data-lucide="moon" class="moon w-5 h-5"></i>
+            </button>
+        </div>
+
+        <div class="pop w-full max-w-md rounded-[2rem] p-8 sm:p-10 border border-line backdrop-blur-xl" style="background: color-mix(in srgb, var(--surface) 85%, transparent); box-shadow: var(--shadow);">
+            <div class="text-center mb-8">
+                <img src="housscase_.jpg" alt="Logo" class="w-16 h-16 rounded-2xl object-cover mx-auto mb-4 border border-line">
+                <div class="font-script text-4xl font-bold leading-none">housscase</div>
+                <p class="text-muted text-sm mt-2">Espace administrateur</p>
+            </div>
+
+            <div id="config-warning" class="hidden-view mb-5 p-4 rounded-xl text-sm border" style="background: rgba(239,68,68,.1); border-color: rgba(239,68,68,.4); color:#ef4444;">
+                Supabase n'est pas configuré. Remplace <b>SUPABASE_URL</b> et <b>SUPABASE_ANON_KEY</b> dans ce fichier.
+            </div>
+
+            <form onsubmit="handleLogin(event)" class="space-y-4">
+                <div>
+                    <label class="text-xs font-bold text-muted uppercase tracking-wider">Email</label>
+                    <div class="relative mt-1.5">
+                        <i data-lucide="mail" class="w-5 h-5 absolute left-4 top-1/2 -translate-y-1/2 text-muted"></i>
+                        <input id="login-email" type="email" required autocomplete="username" placeholder="admin@housscase.com" class="field w-full pl-12 pr-4 py-3.5 rounded-xl text-sm">
+                    </div>
+                </div>
+                <div>
+                    <label class="text-xs font-bold text-muted uppercase tracking-wider">Mot de passe</label>
+                    <div class="relative mt-1.5">
+                        <i data-lucide="lock" class="w-5 h-5 absolute left-4 top-1/2 -translate-y-1/2 text-muted"></i>
+                        <input id="login-pass" type="password" required autocomplete="current-password" placeholder="••••••••" class="field w-full pl-12 pr-12 py-3.5 rounded-xl text-sm">
+                        <button type="button" onclick="togglePass()" class="absolute right-3 top-1/2 -translate-y-1/2 p-1.5 text-muted hover:text-[var(--accent2)] transition-colors" aria-label="Afficher le mot de passe">
+                            <i data-lucide="eye" class="w-5 h-5"></i>
+                        </button>
+                    </div>
+                </div>
+                <p id="login-error" class="text-sm font-semibold hidden-view" style="color:#ef4444;"></p>
+                <button id="login-btn" type="submit" class="btn-shine w-full py-4 rounded-xl font-bold bg-accent hover:scale-[1.02] active:scale-95 transition-transform flex items-center justify-center gap-2">
+                    Se connecter <i data-lucide="arrow-right" class="w-5 h-5"></i>
+                </button>
+            </form>
+        </div>
+    </section>
+
+    <!-- ============ APPLICATION ============ -->
+    <div id="app-view" class="hidden-view relative z-10">
+
+        <header class="sticky top-0 z-30 border-b border-line backdrop-blur-xl" style="background: color-mix(in srgb, var(--bg) 80%, transparent);">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
+                <div class="flex items-center gap-3">
+                    <img src="housscase_.jpg" alt="Logo" class="w-9 h-9 rounded-xl object-cover border border-line">
+                    <span class="font-script text-3xl font-bold leading-none">housscase</span>
+                    <span class="hidden sm:inline px-2.5 py-1 rounded-full text-[10px] font-extrabold uppercase tracking-widest" style="background: var(--accent2); color:#fff;">Admin</span>
+                </div>
+                <div class="flex items-center gap-2">
+                    <a href="index.html" target="_blank" class="hidden sm:flex items-center gap-2 px-4 h-11 rounded-xl bg-surface2 border border-line text-sm font-semibold hover:border-[var(--accent2)] transition-colors">
+                        <i data-lucide="external-link" class="w-4 h-4"></i> Voir le site
+                    </a>
+                    <button onclick="refreshAll(true)" aria-label="Actualiser" class="w-11 h-11 rounded-xl bg-surface2 border border-line text-accent flex items-center justify-center hover:scale-105 active:scale-90 transition-transform">
+                        <i id="refresh-icon" data-lucide="refresh-cw" class="w-5 h-5"></i>
+                    </button>
+                    <button onclick="toggleTheme()" aria-label="Thème" class="theme-btn relative w-11 h-11 rounded-xl bg-surface2 border border-line text-accent flex items-center justify-center hover:scale-105 active:scale-90 transition-transform">
+                        <i data-lucide="sun" class="sun w-5 h-5"></i><i data-lucide="moon" class="moon w-5 h-5"></i>
+                    </button>
+                    <button onclick="handleLogout()" class="flex items-center gap-2 px-4 h-11 rounded-xl border border-line text-sm font-semibold hover:border-red-500 hover:text-red-500 transition-colors">
+                        <i data-lucide="log-out" class="w-4 h-4"></i><span class="hidden sm:inline">Déconnexion</span>
+                    </button>
+                </div>
+            </div>
+        </header>
+
+        <main class="max-w-7xl mx-auto px-4 sm:px-6 py-8">
+
+            <!-- Statistiques -->
+            <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+                <div class="fade-up p-5 rounded-2xl bg-surface border border-line" style="--d:0ms">
+                    <div class="flex items-center justify-between text-muted text-xs font-bold uppercase tracking-wider">Commandes <i data-lucide="receipt" class="w-4 h-4 text-accent"></i></div>
+                    <div id="st-orders" class="text-3xl font-extrabold mt-2">0</div>
+                </div>
+                <div class="fade-up p-5 rounded-2xl bg-surface border border-line" style="--d:80ms">
+                    <div class="flex items-center justify-between text-muted text-xs font-bold uppercase tracking-wider">En attente <i data-lucide="clock" class="w-4 h-4" style="color:var(--accent2)"></i></div>
+                    <div id="st-pending" class="text-3xl font-extrabold mt-2">0</div>
+                </div>
+                <div class="fade-up p-5 rounded-2xl bg-surface border border-line" style="--d:160ms">
+                    <div class="flex items-center justify-between text-muted text-xs font-bold uppercase tracking-wider">Produits <i data-lucide="package" class="w-4 h-4 text-accent"></i></div>
+                    <div id="st-products" class="text-3xl font-extrabold mt-2">0</div>
+                </div>
+                <div class="fade-up p-5 rounded-2xl bg-surface border border-line" style="--d:240ms">
+                    <div class="flex items-center justify-between text-muted text-xs font-bold uppercase tracking-wider">Chiffre d'affaires <i data-lucide="wallet" class="w-4 h-4 text-accent"></i></div>
+                    <div class="mt-2"><span id="st-revenue" class="text-2xl font-extrabold">0</span> <span class="text-xs text-muted font-semibold">DZD</span></div>
+                </div>
+            </div>
+
+            <!-- Onglets -->
+            <div class="inline-flex p-1.5 rounded-2xl bg-surface border border-line mb-6">
+                <button id="tab-orders" onclick="switchTab('orders')" class="tab active px-6 py-2.5 rounded-xl text-sm font-bold flex items-center gap-2"><i data-lucide="receipt" class="w-4 h-4"></i> Commandes</button>
+                <button id="tab-products" onclick="switchTab('products')" class="tab px-6 py-2.5 rounded-xl text-sm font-bold flex items-center gap-2"><i data-lucide="package" class="w-4 h-4"></i> Produits</button>
+            </div>
+
+            <!-- COMMANDES -->
+            <section id="panel-orders">
+                <div class="flex flex-col md:flex-row gap-4 md:items-center justify-between mb-5">
+                    <div id="status-chips" class="flex flex-wrap gap-2"></div>
+                    <div class="relative w-full md:w-72">
+                        <i data-lucide="search" class="w-5 h-5 absolute left-4 top-1/2 -translate-y-1/2 text-muted"></i>
+                        <input id="order-search" type="search" placeholder="Nom, téléphone, wilaya..." oninput="renderOrders()" class="field w-full pl-12 pr-4 py-3 rounded-xl text-sm">
+                    </div>
+                </div>
+                <div id="orders-list" class="space-y-4"></div>
+            </section>
+
+            <!-- PRODUITS -->
+            <section id="panel-products" class="hidden-view">
+                <div class="flex flex-col sm:flex-row gap-4 sm:items-center justify-between mb-5">
+                    <div class="relative w-full sm:w-72">
+                        <i data-lucide="search" class="w-5 h-5 absolute left-4 top-1/2 -translate-y-1/2 text-muted"></i>
+                        <input id="product-search" type="search" placeholder="Rechercher un produit..." oninput="renderProducts()" class="field w-full pl-12 pr-4 py-3 rounded-xl text-sm">
+                    </div>
+                    <button onclick="openProductModal()" class="btn-shine inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl font-bold bg-accent hover:scale-105 active:scale-95 transition-transform">
+                        <i data-lucide="plus" class="w-5 h-5"></i> Ajouter un produit
+                    </button>
+                </div>
+                <div id="products-list" class="space-y-3"></div>
+            </section>
+        </main>
+    </div>
+
+    <!-- ============ MODAL PRODUIT ============ -->
+    <div id="modal" class="hidden-view fixed inset-0 z-50 flex items-center justify-center p-4">
+        <div onclick="closeProductModal()" class="absolute inset-0 bg-black/60 backdrop-blur-sm"></div>
+        <form id="product-form" onsubmit="saveProduct(event)" class="pop relative w-full max-w-lg max-h-[92vh] overflow-y-auto rounded-3xl p-6 sm:p-8 border border-line" style="background: var(--bg); box-shadow: var(--shadow);">
+            <div class="flex items-center justify-between mb-6">
+                <h3 id="modal-title" class="text-xl font-extrabold">Nouveau produit</h3>
+                <button type="button" onclick="closeProductModal()" aria-label="Fermer" class="p-2 rounded-xl hover:bg-surface2 transition hover:rotate-90 duration-300"><i data-lucide="x" class="w-6 h-6"></i></button>
+            </div>
+            <input type="hidden" id="p-id">
+            <div class="space-y-4">
+                <div>
+                    <label class="text-xs font-bold text-muted uppercase tracking-wider">Nom</label>
+                    <input id="p-name" required maxlength="80" class="field w-full mt-1.5 px-4 py-3 rounded-xl text-sm" placeholder="Ex: Night City">
+                </div>
+                <div>
+                    <label class="text-xs font-bold text-muted uppercase tracking-wider">Description</label>
+                    <textarea id="p-desc" rows="3" maxlength="300" class="field w-full mt-1.5 px-4 py-3 rounded-xl text-sm resize-none" placeholder="Courte description du produit"></textarea>
+                </div>
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="text-xs font-bold text-muted uppercase tracking-wider">Prix (DZD)</label>
+                        <input id="p-price" type="number" min="0" step="1" required class="field w-full mt-1.5 px-4 py-3 rounded-xl text-sm" placeholder="1200">
+                    </div>
+                    <div>
+                        <label class="text-xs font-bold text-muted uppercase tracking-wider">Ancien prix</label>
+                        <input id="p-old" type="number" min="0" step="1" class="field w-full mt-1.5 px-4 py-3 rounded-xl text-sm" placeholder="Optionnel">
+                    </div>
+                </div>
+                <div>
+                    <label class="text-xs font-bold text-muted uppercase tracking-wider">Image</label>
+                    <div class="mt-1.5 flex items-center gap-4">
+                        <div id="p-preview" class="w-20 h-20 rounded-2xl bg-surface2 border border-line overflow-hidden flex items-center justify-center text-muted shrink-0"><i data-lucide="image" class="w-7 h-7"></i></div>
+                        <div class="flex-1 space-y-2">
+                            <input id="p-file" type="file" accept="image/*" onchange="previewFile()" class="block w-full text-xs text-muted file:mr-3 file:py-2 file:px-4 file:rounded-lg file:border-0 file:font-bold file:bg-[var(--accent)] file:text-[var(--accent-ink)] file:cursor-pointer">
+                            <input id="p-url" type="url" placeholder="ou colle un lien d'image" oninput="previewUrl()" class="field w-full px-3 py-2 rounded-lg text-xs">
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="flex gap-3 mt-8">
+                <button type="button" onclick="closeProductModal()" class="flex-1 py-3.5 rounded-xl font-bold border border-line hover:bg-surface2 transition-colors">Annuler</button>
+                <button id="p-submit" type="submit" class="btn-shine flex-1 py-3.5 rounded-xl font-bold bg-accent hover:scale-[1.02] active:scale-95 transition-transform">Enregistrer</button>
+            </div>
+        </form>
+    </div>
+
+    <div id="toasts" class="fixed bottom-5 left-1/2 -translate-x-1/2 z-[80] flex flex-col items-center gap-2 pointer-events-none"></div>
+
+    <script>
+        /* ================= CONFIG ================= */
+        const SUPABASE_URL = "YOUR_SUPABASE_URL";
+        const SUPABASE_ANON_KEY = "YOUR_SUPABASE_ANON_KEY";
+        const ADMIN_EMAIL = "admin@housscase.com";       // doit être le même que dans supabase-setup.sql
+        const BUCKET = "product-images";
+
+        const READY = !SUPABASE_URL.includes("YOUR_") && !SUPABASE_ANON_KEY.includes("YOUR_");
+        const sb = READY ? window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY) : null;
+
+        const STATUSES = ["En attente", "Confirmée", "Expédiée", "Livrée", "Annulée"];
+        const STATUS_STYLE = {
+            "En attente": "#f59e0b", "Confirmée": "#3b82f6", "Expédiée": "#8b5cf6", "Livrée": "#10b981", "Annulée": "#ef4444"
+        };
+
+        let orders = [], products = [], filter = "Toutes", channel = null;
+
+        /* ================= OUTILS ================= */
+        const $ = (id) => document.getElementById(id);
+        const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+        const fmt = (n) => new Intl.NumberFormat("fr-FR").format(Number(n) || 0);
+        const icons = () => window.lucide && lucide.createIcons();
+        const show = (el) => el.classList.remove("hidden-view");
+        const hide = (el) => el.classList.add("hidden-view");
+
+        function toast(msg, type = "ok") {
+            const el = document.createElement("div");
+            el.className = "toast pointer-events-auto flex items-center gap-3 px-5 py-3 rounded-2xl border border-line backdrop-blur-xl shadow-2xl text-sm font-semibold";
+            el.style.background = "color-mix(in srgb, var(--surface) 92%, transparent)";
+            el.innerHTML = `<i data-lucide="${type === "ok" ? "check-circle-2" : "alert-circle"}" class="w-5 h-5" style="color:${type === "ok" ? "var(--accent2)" : "#ef4444"}"></i><span>${esc(msg)}</span>`;
+            $("toasts").appendChild(el); icons();
+            setTimeout(() => { el.classList.add("out"); setTimeout(() => el.remove(), 350); }, 2800);
+        }
+
+        function toggleTheme() {
+            const d = document.documentElement.classList.toggle("dark");
+            try { localStorage.setItem("theme", d ? "dark" : "light"); } catch (e) {}
+        }
+
+        function togglePass() {
+            const i = $("login-pass");
+            i.type = i.type === "password" ? "text" : "password";
+        }
+
+        /* ================= AUTH ================= */
+        async function handleLogin(e) {
+            e.preventDefault();
+            const err = $("login-error"); hide(err);
+            if (!READY) return show($("config-warning"));
+
+            const btn = $("login-btn"); const old = btn.innerHTML;
+            btn.disabled = true; btn.innerHTML = `<i data-lucide="loader-2" class="w-5 h-5 spin"></i> Connexion...`; icons();
+
+            const email = $("login-email").value.trim().toLowerCase();
+            const { data, error } = await sb.auth.signInWithPassword({ email, password: $("login-pass").value });
+
+            btn.disabled = false; btn.innerHTML = old; icons();
+
+            if (error) { err.textContent = "Email ou mot de passe incorrect."; show(err); return; }
+            if ((data.user?.email || "").toLowerCase() !== ADMIN_EMAIL.toLowerCase()) {
+                await sb.auth.signOut();
+                err.textContent = "Accès refusé : ce compte n'est pas administrateur."; show(err); return;
+            }
+            enterApp();
+        }
+
+        async function handleLogout() {
+            if (channel) { sb.removeChannel(channel); channel = null; }
+            await sb.auth.signOut();
+            hide($("app-view")); show($("login-view"));
+            $("login-pass").value = "";
+        }
+
+        async function enterApp() {
+            hide($("login-view")); show($("app-view"));
+            renderSkeletons();
+            await refreshAll();
+            subscribeOrders();
+            icons();
+        }
+
+        /* ================= DONNEES ================= */
+        async function refreshAll(manual = false) {
+            const ic = $("refresh-icon"); ic?.classList.add("spin");
+            const [o, p] = await Promise.all([
+                sb.from("orders").select("*").order("created_at", { ascending: false }),
+                sb.from("products").select("*").order("created_at", { ascending: false })
+            ]);
+            ic?.classList.remove("spin");
+
+            if (o.error) toast("Impossible de charger les commandes (vérifie le script SQL).", "err");
+            if (p.error) toast("Impossible de charger les produits.", "err");
+            orders = o.data || []; products = p.data || [];
+            renderStats(); renderChips(); renderOrders(); renderProducts();
+            if (manual) toast("Données actualisées");
+        }
+
+        function subscribeOrders() {
+            try {
+                channel = sb.channel("orders-live")
+                    .on("postgres_changes", { event: "INSERT", schema: "public", table: "orders" }, (payload) => {
+                        orders.unshift(payload.new);
+                        renderStats(); renderChips(); renderOrders();
+                        toast(`Nouvelle commande de ${payload.new.client_name || "client"} !`);
+                    })
+                    .subscribe();
+            } catch (e) {}
+        }
+
+        /* ================= STATS ================= */
+        function renderStats() {
+            $("st-orders").textContent = fmt(orders.length);
+            $("st-pending").textContent = fmt(orders.filter((o) => o.status === "En attente").length);
+            $("st-products").textContent = fmt(products.length);
+            $("st-revenue").textContent = fmt(orders.filter((o) => o.status !== "Annulée").reduce((s, o) => s + Number(o.total_price || 0), 0));
+        }
+
+        function renderSkeletons() {
+            $("orders-list").innerHTML = Array.from({ length: 3 }).map(() => `<div class="skeleton h-32 rounded-2xl"></div>`).join("");
+            $("products-list").innerHTML = Array.from({ length: 3 }).map(() => `<div class="skeleton h-24 rounded-2xl"></div>`).join("");
+        }
+
+        /* ================= ONGLETS ================= */
+        function switchTab(t) {
+            const isO = t === "orders";
+            $("tab-orders").classList.toggle("active", isO); $("tab-products").classList.toggle("active", !isO);
+            isO ? (show($("panel-orders")), hide($("panel-products"))) : (show($("panel-products")), hide($("panel-orders")));
+            icons();
+        }
+
+        /* ================= COMMANDES ================= */
+        function renderChips() {
+            const all = ["Toutes", ...STATUSES];
+            $("status-chips").innerHTML = all.map((s) => {
+                const n = s === "Toutes" ? orders.length : orders.filter((o) => o.status === s).length;
+                return `<button onclick="setFilter('${s}')" class="chip ${filter === s ? "active" : ""} px-4 py-2 rounded-full text-xs font-bold border border-line bg-surface hover:border-[var(--accent2)]">${s} <span class="opacity-70">${n}</span></button>`;
+            }).join("");
+        }
+        function setFilter(s) { filter = s; renderChips(); renderOrders(); }
+
+        function renderOrders() {
+            const q = ($("order-search")?.value || "").trim().toLowerCase();
+            const list = orders.filter((o) =>
+                (filter === "Toutes" || o.status === filter) &&
+                (!q || [o.client_name, o.phone, o.wilaya].some((v) => String(v || "").toLowerCase().includes(q)))
+            );
+            const box = $("orders-list");
+            if (!list.length) {
+                box.innerHTML = `<div class="text-center py-20 text-muted"><i data-lucide="inbox" class="w-12 h-12 mx-auto mb-3 opacity-40"></i>Aucune commande.</div>`;
+                return icons();
+            }
+            box.innerHTML = list.map((o, i) => {
+                const color = STATUS_STYLE[o.status] || "#999";
+                const items = Array.isArray(o.items) && o.items.length
+                    ? o.items.map((it) => `<span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-surface2 border border-line text-xs font-semibold">${esc(it.name)} <b class="text-accent">×${esc(it.qty)}</b></span>`).join(" ")
+                    : `<span class="text-xs text-muted">Détail des articles non disponible</span>`;
+                const date = o.created_at ? new Date(o.created_at).toLocaleString("fr-FR", { dateStyle: "medium", timeStyle: "short" }) : "";
+                const phone = esc(o.phone);
+                const wa = String(o.phone || "").replace(/\D/g, "").replace(/^0/, "213");
+                return `
+                <article class="fade-up p-5 rounded-2xl bg-surface border border-line hover:border-[var(--accent2)] transition-colors" style="--d:${Math.min(i, 8) * 40}ms">
+                    <div class="flex flex-col lg:flex-row lg:items-center gap-4 justify-between">
+                        <div class="min-w-0">
+                            <div class="flex items-center gap-3 flex-wrap">
+                                <h4 class="font-extrabold text-lg">${esc(o.client_name)}</h4>
+                                <span class="px-3 py-1 rounded-full text-[11px] font-extrabold" style="background:${color}22; color:${color}">● ${esc(o.status)}</span>
+                            </div>
+                            <div class="flex flex-wrap items-center gap-x-5 gap-y-1 mt-2 text-sm text-muted">
+                                <a href="tel:${phone}" class="inline-flex items-center gap-1.5 hover:text-[var(--accent2)] transition-colors"><i data-lucide="phone" class="w-4 h-4"></i>${phone}</a>
+                                <a href="https://wa.me/${wa}" target="_blank" rel="noopener" class="inline-flex items-center gap-1.5 hover:text-[#25D366] transition-colors"><i data-lucide="message-circle" class="w-4 h-4"></i>WhatsApp</a>
+                                <span class="inline-flex items-center gap-1.5"><i data-lucide="map-pin" class="w-4 h-4"></i>${esc(o.wilaya)}</span>
+                                <span class="inline-flex items-center gap-1.5"><i data-lucide="calendar" class="w-4 h-4"></i>${esc(date)}</span>
+                            </div>
+                            <div class="flex flex-wrap gap-2 mt-3">${items}</div>
+                        </div>
+                        <div class="flex lg:flex-col items-center lg:items-end justify-between gap-3 shrink-0">
+                            <div class="text-2xl font-extrabold text-accent">${fmt(o.total_price)} <span class="text-xs text-muted font-semibold">DZD</span></div>
+                            <div class="flex items-center gap-2">
+                                <select onchange="updateStatus('${esc(o.id)}', this.value)" class="field px-3 py-2.5 rounded-xl text-sm font-semibold cursor-pointer">
+                                    ${STATUSES.map((s) => `<option value="${s}" ${s === o.status ? "selected" : ""}>${s}</option>`).join("")}
+                                </select>
+                                <button onclick="deleteOrder('${esc(o.id)}')" aria-label="Supprimer" class="w-10 h-10 rounded-xl border border-line flex items-center justify-center text-muted hover:text-red-500 hover:border-red-500 active:scale-90 transition"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
+                            </div>
+                        </div>
+                    </div>
+                </article>`;
+            }).join("");
+            icons();
+        }
+
+        async function updateStatus(id, status) {
+            const { error } = await sb.from("orders").update({ status }).eq("id", id);
+            if (error) return toast("Erreur lors de la mise à jour.", "err");
+            const o = orders.find((x) => String(x.id) === String(id)); if (o) o.status = status;
+            renderStats(); renderChips(); renderOrders();
+            toast(`Statut : ${status}`);
+        }
+
+        async function deleteOrder(id) {
+            if (!confirm("Supprimer cette commande définitivement ?")) return;
+            const { error } = await sb.from("orders").delete().eq("id", id);
+            if (error) return toast("Suppression impossible.", "err");
+            orders = orders.filter((o) => String(o.id) !== String(id));
+            renderStats(); renderChips(); renderOrders();
+            toast("Commande supprimée");
+        }
+
+        /* ================= PRODUITS ================= */
+        function renderProducts() {
+            const q = ($("product-search")?.value || "").trim().toLowerCase();
+            const list = products.filter((p) => !q || String(p.name || "").toLowerCase().includes(q));
+            const box = $("products-list");
+            if (!list.length) {
+                box.innerHTML = `<div class="text-center py-20 text-muted"><i data-lucide="package-open" class="w-12 h-12 mx-auto mb-3 opacity-40"></i>Aucun produit. Clique sur « Ajouter un produit ».</div>`;
+                return icons();
+            }
+            box.innerHTML = list.map((p, i) => {
+                const id = esc(p.id);
+                const img = p.image_url
+                    ? `<img src="${esc(p.image_url)}" alt="" class="w-full h-full object-cover">`
+                    : `<i data-lucide="smartphone" class="w-7 h-7 text-muted"></i>`;
+                return `
+                <article class="fade-up p-4 rounded-2xl bg-surface border border-line hover:border-[var(--accent2)] transition-colors flex flex-col md:flex-row md:items-center gap-4" style="--d:${Math.min(i, 8) * 40}ms">
+                    <div class="flex items-center gap-4 flex-1 min-w-0">
+                        <div class="w-16 h-16 rounded-xl bg-surface2 border border-line overflow-hidden flex items-center justify-center shrink-0">${img}</div>
+                        <div class="min-w-0">
+                            <h4 class="font-bold truncate">${esc(p.name)}</h4>
+                            <p class="text-xs text-muted line-clamp-1">${esc(p.description || "—")}</p>
+                        </div>
+                    </div>
+                    <div class="flex items-end gap-3 flex-wrap">
+                        <div>
+                            <label class="block text-[10px] font-bold text-muted uppercase tracking-wider mb-1">Prix</label>
+                            <input type="number" min="0" value="${esc(p.price)}" data-id="${id}" data-field="price" data-orig="${esc(p.price)}" oninput="markDirty(this)" class="field w-28 px-3 py-2.5 rounded-xl text-sm font-bold">
+                        </div>
+                        <div>
+                            <label class="block text-[10px] font-bold text-muted uppercase tracking-wider mb-1">Ancien prix</label>
+                            <input type="number" min="0" value="${p.old_price ?? ""}" placeholder="—" data-id="${id}" data-field="old_price" data-orig="${p.old_price ?? ""}" oninput="markDirty(this)" class="field w-28 px-3 py-2.5 rounded-xl text-sm">
+                        </div>
+                        <button id="save-${id}" onclick="quickSave('${id}')" class="hidden-view btn-shine px-4 h-10 rounded-xl text-sm font-bold bg-accent active:scale-95 transition-transform flex items-center gap-1.5"><i data-lucide="check" class="w-4 h-4"></i>Enregistrer</button>
+                        <button onclick="openProductModal('${id}')" aria-label="Modifier" class="w-10 h-10 rounded-xl border border-line flex items-center justify-center text-muted hover:text-[var(--accent2)] hover:border-[var(--accent2)] active:scale-90 transition"><i data-lucide="pencil" class="w-4 h-4"></i></button>
+                        <button onclick="deleteProduct('${id}')" aria-label="Supprimer" class="w-10 h-10 rounded-xl border border-line flex items-center justify-center text-muted hover:text-red-500 hover:border-red-500 active:scale-90 transition"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
+                    </div>
+                </article>`;
+            }).join("");
+            icons();
+        }
+
+        function markDirty(input) {
+            const id = input.dataset.id;
+            const row = input.closest("article");
+            const inputs = row.querySelectorAll("input[data-id]");
+            let dirty = false;
+            inputs.forEach((i) => { const d = i.value !== i.dataset.orig; i.classList.toggle("dirty", d); if (d) dirty = true; });
+            const btn = $("save-" + id);
+            dirty ? btn.classList.remove("hidden-view") : btn.classList.add("hidden-view");
+        }
+
+        async function quickSave(id) {
+            const row = document.querySelector(`#save-${CSS.escape(id)}`).closest("article");
+            const price = Number(row.querySelector('[data-field="price"]').value);
+            const oldRaw = row.querySelector('[data-field="old_price"]').value;
+            if (!(price >= 0) || row.querySelector('[data-field="price"]').value === "") return toast("Prix invalide.", "err");
+            const payload = { price, old_price: oldRaw === "" ? null : Number(oldRaw) };
+            const { error } = await sb.from("products").update(payload).eq("id", id);
+            if (error) return toast("Erreur lors de l'enregistrement.", "err");
+            const p = products.find((x) => String(x.id) === String(id)); if (p) Object.assign(p, payload);
+            renderProducts(); toast("Prix mis à jour");
+        }
+
+        async function deleteProduct(id) {
+            const p = products.find((x) => String(x.id) === String(id));
+            if (!confirm(`Supprimer « ${p?.name || "ce produit"} » ?`)) return;
+            const { error } = await sb.from("products").delete().eq("id", id);
+            if (error) return toast("Suppression impossible.", "err");
+            products = products.filter((x) => String(x.id) !== String(id));
+            renderStats(); renderProducts(); toast("Produit supprimé");
+        }
+
+        /* ---- Modal ---- */
+        function setPreview(url) {
+            $("p-preview").innerHTML = url ? `<img src="${esc(url)}" class="w-full h-full object-cover" onerror="this.remove()">` : `<i data-lucide="image" class="w-7 h-7"></i>`;
+            icons();
+        }
+        function previewFile() { const f = $("p-file").files[0]; if (f) setPreview(URL.createObjectURL(f)); }
+        function previewUrl() { setPreview($("p-url").value.trim()); }
+
+        function openProductModal(id) {
+            const p = id ? products.find((x) => String(x.id) === String(id)) : null;
+            $("modal-title").textContent = p ? "Modifier le produit" : "Nouveau produit";
+            $("p-id").value = p ? p.id : "";
+            $("p-name").value = p?.name || "";
+            $("p-desc").value = p?.description || "";
+            $("p-price").value = p?.price ?? "";
+            $("p-old").value = p?.old_price ?? "";
+            $("p-url").value = p?.image_url || "";
+            $("p-file").value = "";
+            setPreview(p?.image_url || "");
+            show($("modal")); icons();
+            setTimeout(() => $("p-name").focus(), 50);
+        }
+        function closeProductModal() { hide($("modal")); }
+        document.addEventListener("keydown", (e) => { if (e.key === "Escape") closeProductModal(); });
+
+        async function saveProduct(e) {
+            e.preventDefault();
+            const btn = $("p-submit"); const old = btn.textContent;
+            btn.disabled = true; btn.textContent = "Enregistrement...";
+            try {
+                let image_url = $("p-url").value.trim() || null;
+                const file = $("p-file").files[0];
+                if (file) {
+                    const ext = (file.name.split(".").pop() || "jpg").toLowerCase().replace(/[^a-z0-9]/g, "");
+                    const path = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`;
+                    const up = await sb.storage.from(BUCKET).upload(path, file, { cacheControl: "3600", upsert: false });
+                    if (up.error) throw new Error("Téléversement de l'image impossible (bucket manquant ?).");
+                    image_url = sb.storage.from(BUCKET).getPublicUrl(path).data.publicUrl;
+                }
+                const oldRaw = $("p-old").value;
+                const payload = {
+                    name: $("p-name").value.trim(),
+                    description: $("p-desc").value.trim() || null,
+                    price: Number($("p-price").value),
+                    old_price: oldRaw === "" ? null : Number(oldRaw),
+                    image_url
+                };
+                const id = $("p-id").value;
+                const res = id
+                    ? await sb.from("products").update(payload).eq("id", id).select().single()
+                    : await sb.from("products").insert([payload]).select().single();
+                if (res.error) throw new Error(res.error.message);
+
+                if (id) products = products.map((x) => (String(x.id) === String(id) ? res.data : x));
+                else products.unshift(res.data);
+                renderStats(); renderProducts(); closeProductModal();
+                toast(id ? "Produit modifié" : "Produit ajouté");
+            } catch (err) {
+                toast(err.message || "Erreur.", "err");
+            } finally {
+                btn.disabled = false; btn.textContent = old;
+            }
+        }
+
+        /* ================= INIT ================= */
+        window.addEventListener("load", async () => {
+            icons();
+            $("login-email").value = ADMIN_EMAIL;
+            if (!READY) { show($("config-warning")); return; }
+            const { data } = await sb.auth.getSession();
+            const email = (data.session?.user?.email || "").toLowerCase();
+            if (email && email === ADMIN_EMAIL.toLowerCase()) enterApp();
+        });
+    </script>
+</body>
+</html>
