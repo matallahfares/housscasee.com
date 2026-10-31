@@ -121,7 +121,6 @@
         @keyframes marquee { to { transform: translateX(-50%); } }
 
         .tilt { transform-style: preserve-3d; transition: transform .25s ease, box-shadow .3s ease, border-color .3s ease; }
-        .tilt-inner { transform: translateZ(30px); }
         .card-glow::before {
             content: ""; position: absolute; inset: 0; border-radius: inherit; pointer-events: none; opacity: 0;
             background: radial-gradient(400px circle at var(--mx, 50%) var(--my, 50%), var(--glow), transparent 45%);
@@ -621,7 +620,6 @@
             saveCart();
             fetchProducts();
 
-            // Effet curseur lumineux
             const glow = document.getElementById("cursor-glow");
             window.addEventListener("mousemove", (e) => {
                 glow.style.left = e.clientX + "px";
@@ -629,7 +627,6 @@
                 glow.style.opacity = "1";
             });
 
-            // Barre de progression scroll
             window.addEventListener("scroll", () => {
                 const h = document.documentElement;
                 const st = h.scrollTop || document.body.scrollTop;
