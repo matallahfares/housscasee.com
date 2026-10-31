@@ -351,13 +351,6 @@
         const SUPABASE_ANON_KEY = "sb_publishable_sMNgngHYK60xe3gcJbpEig_9Fy9J2Kl";
         const sb = window.supabase ? window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY) : null;
 
-        const DEMO_PRODUCTS = [
-            { id: "d1", name: "Night City", description: "Coque transparente, vue nocturne de Times Square.", price: 1200, old_price: 1600 },
-            { id: "d2", name: "Library Mood", description: "Ambiance bibliothèque chaleureuse, finition soft.", price: 1200 },
-            { id: "d3", name: "Waiting Rooftop", description: "Coucher de soleil sur les toits, bords renforcés.", price: 1300, old_price: 1700 },
-            { id: "d4", name: "Neon Scroll", description: "Néons roses et violets pour les noctambules.", price: 1300 }
-        ];
-
         let products = [];
         let cart = [];
         try { cart = JSON.parse(localStorage.getItem("cart") || "[]"); } catch (e) { cart = []; }
