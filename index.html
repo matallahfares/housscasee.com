@@ -167,6 +167,16 @@
         .field { background: var(--surface2); border: 1px solid var(--line); color: var(--ink); transition: border-color .25s, box-shadow .25s; }
         .field:focus { outline: none; border-color: var(--accent2); box-shadow: 0 0 0 4px var(--glow); }
 
+        /* Liste des wilayas */
+        .wl-item { transition: background .15s; }
+        .wl-item:hover, .wl-item.active { background: var(--surface2); }
+
+        /* Choix du mode de livraison */
+        .dl-opt { border: 1.5px solid var(--line); background: var(--surface2); transition: border-color .25s, box-shadow .25s, transform .2s; }
+        .dl-opt:not(:disabled):hover { border-color: var(--accent2); }
+        .dl-opt.selected { border-color: var(--accent2); box-shadow: 0 0 0 3px var(--glow); }
+        .dl-opt:disabled { opacity: .45; cursor: not-allowed; }
+
         @media (prefers-reduced-motion: reduce) {
             *, *::before, *::after { animation: none !important; transition: none !important; }
             .reveal { opacity: 1; transform: none; }
@@ -363,24 +373,55 @@
 
     <div id="cart-drawer" class="fixed inset-0 z-50 pointer-events-none opacity-0 transition-opacity duration-300">
         <div onclick="toggleCart()" class="absolute inset-0 bg-black/60 backdrop-blur-sm"></div>
-        <aside id="drawer-content" class="absolute right-0 top-0 h-full w-full max-w-md p-6 flex flex-col translate-x-full transition-transform duration-500 pointer-events-auto border-l border-line"
+        <aside id="drawer-content" class="absolute right-0 top-0 h-full w-full max-w-md p-6 flex flex-col overflow-y-auto translate-x-full transition-transform duration-500 pointer-events-auto border-l border-line"
                style="background: var(--bg); transition-timing-function: cubic-bezier(.2,.8,.2,1); box-shadow: var(--shadow);">
-            <div class="flex items-center justify-between pb-4 mb-4 border-b border-line">
+            <div class="flex items-center justify-between pb-4 mb-4 border-b border-line shrink-0">
                 <h3 class="text-xl font-extrabold flex items-center gap-2"><i data-lucide="shopping-bag" class="text-accent"></i> Ton panier</h3>
                 <button onclick="toggleCart()" aria-label="Fermer" class="p-2 rounded-xl hover:bg-surface2 transition-colors hover:rotate-90 duration-300"><i data-lucide="x" class="w-6 h-6"></i></button>
             </div>
 
-            <div id="cart-items" class="flex-1 overflow-y-auto space-y-3 pr-1"></div>
+            <div id="cart-items" class="flex-1 min-h-[90px] overflow-y-auto space-y-3 pr-1"></div>
 
-            <div class="pt-5 mt-4 border-t border-line space-y-4">
-                <div class="flex justify-between items-center text-lg font-bold">
-                    <span class="text-muted">Total</span>
-                    <span id="cart-total" class="text-2xl text-accent">0 DZD</span>
-                </div>
+            <div class="pt-5 mt-4 border-t border-line space-y-4 shrink-0">
                 <form id="order-form" onsubmit="handleCheckout(event)" class="space-y-3">
                     <input type="text" id="client-name" placeholder="Nom et prénom" required class="field w-full px-4 py-3 rounded-xl text-sm">
                     <input type="tel" id="client-phone" placeholder="Numéro de téléphone" required class="field w-full px-4 py-3 rounded-xl text-sm">
-                    <input type="text" id="client-wilaya" placeholder="Wilaya (ex: Mostaganem)" required class="field w-full px-4 py-3 rounded-xl text-sm">
+
+                    <!-- Choix de la wilaya (recherche + liste) -->
+                    <div id="wilaya-box" class="relative">
+                        <i data-lucide="map-pin" class="w-4 h-4 absolute left-4 top-1/2 -translate-y-1/2 text-muted pointer-events-none"></i>
+                        <input type="text" id="client-wilaya" placeholder="Wilaya (tape ex : Mosta...)" required autocomplete="off"
+                               oninput="onWilayaInput()" onfocus="openWilayaList()" onkeydown="onWilayaKey(event)"
+                               class="field w-full pl-11 pr-4 py-3 rounded-xl text-sm">
+                        <div id="wilaya-list" class="hidden absolute bottom-full left-0 right-0 mb-2 max-h-56 overflow-y-auto rounded-xl border border-line z-20"
+                             style="background: var(--surface); box-shadow: var(--shadow);"></div>
+                    </div>
+
+                    <!-- Mode de livraison + tarif -->
+                    <div id="delivery-opts" class="hidden space-y-2">
+                        <p class="text-xs font-bold uppercase tracking-wider text-muted">Mode de livraison</p>
+                        <div class="grid grid-cols-2 gap-2">
+                            <button type="button" id="opt-home" onclick="setDelivery('home')" class="dl-opt rounded-xl p-3 text-left">
+                                <div class="flex items-center gap-2 text-sm font-bold"><i data-lucide="home" class="w-4 h-4 text-accent"></i> À domicile</div>
+                                <div id="opt-home-price" class="text-lg font-extrabold text-accent mt-1">—</div>
+                            </button>
+                            <button type="button" id="opt-desk" onclick="setDelivery('desk')" class="dl-opt rounded-xl p-3 text-left">
+                                <div class="flex items-center gap-2 text-sm font-bold"><i data-lucide="building-2" class="w-4 h-4 text-accent"></i> Stop Desk</div>
+                                <div id="opt-desk-price" class="text-lg font-extrabold text-accent mt-1">—</div>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Récapitulatif -->
+                    <div class="space-y-1.5 pt-1">
+                        <div class="flex justify-between text-sm text-muted"><span>Sous-total</span><span id="cart-subtotal">0 DZD</span></div>
+                        <div class="flex justify-between text-sm text-muted"><span>Livraison</span><span id="cart-delivery">—</span></div>
+                        <div class="flex justify-between items-center text-lg font-bold pt-1">
+                            <span class="text-muted">Total</span>
+                            <span id="cart-total" class="text-2xl text-accent">0 DZD</span>
+                        </div>
+                    </div>
+
                     <button id="submit-btn" type="submit" class="btn-shine w-full py-4 rounded-xl font-bold bg-accent hover:scale-[1.02] active:scale-95 transition-transform">
                         Confirmer la commande
                     </button>
@@ -398,13 +439,78 @@
         const SUPABASE_READY = !SUPABASE_URL.includes("YOUR_") && !SUPABASE_ANON_KEY.includes("YOUR_");
         const sb = SUPABASE_READY ? window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY) : null;
 
+        /* ================= TARIFS DE LIVRAISON (départ d'Oran) =================
+           [numéro, nom, tarif à domicile, tarif stop desk (null = indisponible)] */
+        const WILAYAS = [
+            [1, "Adrar", 1400, 980],
+            [2, "Chlef", 750, 530],
+            [3, "Laghouat", 950, 680],
+            [4, "Oum El Bouaghi", 800, 530],
+            [5, "Batna", 800, 530],
+            [6, "Béjaïa", 800, 530],
+            [7, "Biskra", 950, 680],
+            [8, "Béchar", 1050, 730],
+            [9, "Blida", 750, 530],
+            [10, "Bouira", 800, 530],
+            [11, "Tamanrasset", 1600, 1130],
+            [12, "Tébessa", 850, 530],
+            [13, "Tlemcen", 700, 530],
+            [14, "Tiaret", 750, 530],
+            [15, "Tizi Ouzou", 800, 530],
+            [16, "Alger", 650, 480],
+            [17, "Djelfa", 950, 680],
+            [18, "Jijel", 800, 530],
+            [19, "Sétif", 800, 530],
+            [20, "Saïda", 750, 580],
+            [21, "Skikda", 800, 530],
+            [22, "Sidi Bel Abbès", 700, 530],
+            [23, "Annaba", 850, 530],
+            [24, "Guelma", 850, 530],
+            [25, "Constantine", 800, 530],
+            [26, "Médéa", 750, 530],
+            [27, "Mostaganem", 700, 530],
+            [28, "M'Sila", 900, 580],
+            [29, "Mascara", 700, 530],
+            [30, "Ouargla", 950, 730],
+            [31, "Oran", 500, 380],
+            [32, "El Bayadh", 1000, 680],
+            [34, "Bordj Bou Arréridj", 800, 530],
+            [35, "Boumerdès", 800, 530],
+            [36, "El Tarf", 850, 530],
+            [38, "Tissemsilt", 750, 530],
+            [39, "El Oued", 950, 730],
+            [40, "Khenchela", 800, 530],
+            [41, "Souk Ahras", 800, 530],
+            [42, "Tipaza", 800, 530],
+            [43, "Mila", 800, 530],
+            [44, "Aïn Defla", 750, 530],
+            [45, "Naâma", 1000, 680],
+            [46, "Aïn Témouchent", 650, 530],
+            [47, "Ghardaïa", 950, 680],
+            [48, "Relizane", 750, 530],
+            [49, "Timimoun", 1400, 980],
+            [51, "Ouled Djellal", 950, 680],
+            [52, "Béni Abbès", 1200, 980],
+            [53, "In Salah", 1600, 1130],
+            [54, "In Guezzam", 1600, null],
+            [55, "Touggourt", 950, 730],
+            [57, "El Meghaier", 950, null],
+            [58, "El Menia", 950, 730]
+        ].map(([num, name, home, desk]) => ({ num, name, home, desk }));
+
         let products = [];
         let cart = [];
         try { cart = JSON.parse(localStorage.getItem("cart") || "[]"); } catch (e) { cart = []; }
 
+        let selWilaya = null;      // wilaya choisie (objet de WILAYAS)
+        let deliveryType = "home"; // "home" | "desk"
+        let wlMatches = [];        // résultats affichés dans la liste
+        let wlActive = 0;          // élément surligné au clavier
+
         const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
         const fmt = (n) => new Intl.NumberFormat("fr-FR").format(n);
         const icons = () => window.lucide && lucide.createIcons();
+        const norm = (s) => String(s || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().replace(/[^a-z0-9 ]/g, "").trim();
 
         function toast(msg, type = "ok") {
             const el = document.createElement("div");
@@ -517,16 +623,121 @@
             updateCartUI();
         }
 
+        /* ================= LIVRAISON ================= */
+        function deliveryFee() {
+            if (!selWilaya) return null;
+            const fee = deliveryType === "desk" ? selWilaya.desk : selWilaya.home;
+            return fee == null ? null : fee;
+        }
+
+        function wilayaRowHTML(w, idx, active) {
+            const desk = w.desk == null ? "Stop Desk indisponible" : `Stop Desk ${fmt(w.desk)} DA`;
+            return `<button type="button" data-i="${idx}" onclick="pickWilaya(${idx})" class="wl-item ${active ? "active" : ""} w-full text-left px-4 py-2.5 flex items-center justify-between gap-3">
+                <span class="font-semibold text-sm"><span class="text-muted text-xs mr-1.5">${String(w.num).padStart(2, "0")}</span>${esc(w.name)}</span>
+                <span class="text-[11px] text-muted text-right leading-tight">Domicile ${fmt(w.home)} DA<br>${desk}</span>
+            </button>`;
+        }
+
+        function renderWilayaList() {
+            const input = document.getElementById("client-wilaya");
+            const list = document.getElementById("wilaya-list");
+            const q = norm(input.value);
+            wlMatches = WILAYAS.filter((w) => !q || norm(w.name).includes(q) || String(w.num) === q || String(w.num).padStart(2, "0") === q);
+            if (wlActive >= wlMatches.length) wlActive = 0;
+            if (!wlMatches.length) {
+                list.innerHTML = `<div class="px-4 py-3 text-sm text-muted">Aucune wilaya trouvée.</div>`;
+            } else {
+                list.innerHTML = wlMatches.map((w, i) => wilayaRowHTML(w, WILAYAS.indexOf(w), i === wlActive)).join("");
+            }
+        }
+
+        function openWilayaList() {
+            wlActive = 0;
+            renderWilayaList();
+            document.getElementById("wilaya-list").classList.remove("hidden");
+        }
+        function closeWilayaList() { document.getElementById("wilaya-list").classList.add("hidden"); }
+
+        function onWilayaInput() {
+            // si le client retape, on annule la sélection précédente
+            if (selWilaya && norm(document.getElementById("client-wilaya").value) !== norm(selWilaya.name)) {
+                selWilaya = null;
+                document.getElementById("delivery-opts").classList.add("hidden");
+                updateCartUI();
+            }
+            wlActive = 0;
+            renderWilayaList();
+            document.getElementById("wilaya-list").classList.remove("hidden");
+        }
+
+        function onWilayaKey(e) {
+            const listEl = document.getElementById("wilaya-list");
+            if (e.key === "ArrowDown" || e.key === "ArrowUp") {
+                e.preventDefault();
+                if (listEl.classList.contains("hidden")) openWilayaList();
+                if (!wlMatches.length) return;
+                wlActive = (wlActive + (e.key === "ArrowDown" ? 1 : -1) + wlMatches.length) % wlMatches.length;
+                renderWilayaList();
+                listEl.querySelector(".wl-item.active")?.scrollIntoView({ block: "nearest" });
+            } else if (e.key === "Enter") {
+                if (!listEl.classList.contains("hidden") && wlMatches[wlActive]) {
+                    e.preventDefault();
+                    pickWilaya(WILAYAS.indexOf(wlMatches[wlActive]));
+                }
+            } else if (e.key === "Escape") {
+                e.stopPropagation();
+                closeWilayaList();
+            }
+        }
+
+        function pickWilaya(idx) {
+            selWilaya = WILAYAS[idx];
+            document.getElementById("client-wilaya").value = selWilaya.name;
+            closeWilayaList();
+            // si le mode actuel n'est pas dispo, repasser à domicile
+            if (deliveryType === "desk" && selWilaya.desk == null) deliveryType = "home";
+            document.getElementById("delivery-opts").classList.remove("hidden");
+            updateCartUI();
+            icons();
+        }
+
+        function setDelivery(type) {
+            if (!selWilaya) return;
+            if (type === "desk" && selWilaya.desk == null) return;
+            deliveryType = type;
+            updateCartUI();
+        }
+
+        function refreshDeliveryUI() {
+            const opts = document.getElementById("delivery-opts");
+            if (!selWilaya) { opts.classList.add("hidden"); return; }
+            opts.classList.remove("hidden");
+
+            const home = document.getElementById("opt-home");
+            const desk = document.getElementById("opt-desk");
+            document.getElementById("opt-home-price").textContent = `${fmt(selWilaya.home)} DA`;
+            document.getElementById("opt-desk-price").textContent = selWilaya.desk == null ? "Indisponible" : `${fmt(selWilaya.desk)} DA`;
+            desk.disabled = selWilaya.desk == null;
+            home.classList.toggle("selected", deliveryType === "home");
+            desk.classList.toggle("selected", deliveryType === "desk");
+        }
+
         function updateCartUI() {
             const count = cart.reduce((s, i) => s + i.qty, 0);
-            const total = cart.reduce((s, i) => s + i.price * i.qty, 0);
+            const subtotal = cart.reduce((s, i) => s + i.price * i.qty, 0);
+            const fee = cart.length ? deliveryFee() : null;
+            const total = subtotal + (fee || 0);
+
             document.getElementById("cart-count").textContent = count;
+            document.getElementById("cart-subtotal").textContent = `${fmt(subtotal)} DZD`;
+            document.getElementById("cart-delivery").textContent = fee == null ? "— (choisis ta wilaya)" : `${fmt(fee)} DZD`;
             document.getElementById("cart-total").textContent = `${fmt(total)} DZD`;
             saveCart();
+            refreshDeliveryUI();
 
             const box = document.getElementById("cart-items");
             if (!cart.length) {
-                box.innerHTML = `<div class="h-full flex flex-col items-center justify-center text-center text-muted py-16 gap-3">
+                box.innerHTML = `<div class="h-full flex flex-col items-center justify-center text-center text-muted py-10 gap-3">
                     <i data-lucide="shopping-bag" class="w-14 h-14 opacity-40"></i><p>Ton panier est vide.</p></div>`;
                 icons();
                 return;
@@ -543,6 +754,7 @@
                         <button onclick="changeQty('${esc(i.id)}', 1)" class="w-8 h-8 rounded-lg font-bold hover:bg-[var(--surface)] active:scale-90 transition">+</button>
                     </div>
                 </div>`).join("");
+            icons();
         }
 
         function toggleCart(forceOpen = false) {
@@ -557,26 +769,49 @@
                 drawer.classList.add("opacity-0", "pointer-events-none");
                 content.classList.add("translate-x-full");
                 document.body.style.overflow = "";
+                closeWilayaList();
             }
         }
         document.addEventListener("keydown", (e) => {
             if (e.key === "Escape" && !document.getElementById("cart-drawer").classList.contains("opacity-0")) toggleCart();
+        });
+        // fermer la liste des wilayas quand on clique ailleurs
+        document.addEventListener("click", (e) => {
+            if (!e.target.closest("#wilaya-box")) closeWilayaList();
         });
 
         async function handleCheckout(e) {
             e.preventDefault();
             if (!cart.length) return toast("Ton panier est vide !", "err");
 
+            // Le client doit avoir choisi une wilaya dans la liste
+            if (!selWilaya) {
+                const typed = norm(document.getElementById("client-wilaya").value);
+                const exact = WILAYAS.find((w) => norm(w.name) === typed);
+                if (exact) selWilaya = exact;
+            }
+            if (!selWilaya) {
+                openWilayaList();
+                return toast("Choisis ta wilaya dans la liste.", "err");
+            }
+            if (deliveryType === "desk" && selWilaya.desk == null) deliveryType = "home";
+            const fee = deliveryFee();
+            if (fee == null) return toast("Choisis un mode de livraison.", "err");
+
             const btn = document.getElementById("submit-btn");
             const old = btn.textContent;
             btn.disabled = true; btn.textContent = "Envoi en cours...";
 
+            const modeLabel = deliveryType === "desk" ? "Stop Desk" : "À domicile";
+            const subtotal = cart.reduce((s, i) => s + i.price * i.qty, 0);
+
             const order = {
                 client_name: document.getElementById("client-name").value.trim(),
                 phone: document.getElementById("client-phone").value.trim(),
-                wilaya: document.getElementById("client-wilaya").value.trim(),
-                total_price: cart.reduce((s, i) => s + i.price * i.qty, 0),
-                items: cart,
+                wilaya: `${selWilaya.name} — ${modeLabel}`,
+                total_price: subtotal + fee,
+                // la livraison est ajoutée comme ligne d'article pour qu'elle apparaisse dans l'admin
+                items: [...cart, { name: `Livraison ${modeLabel}`, price: fee, qty: 1 }],
                 status: "En attente"
             };
 
@@ -590,9 +825,11 @@
 
             toast("Commande envoyée ! Merci de ta confiance.");
             cart = [];
+            selWilaya = null;
+            deliveryType = "home";
+            document.getElementById("order-form").reset();
             updateCartUI();
             toggleCart();
-            document.getElementById("order-form").reset();
         }
 
         let io;
