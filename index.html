@@ -167,6 +167,13 @@
         .field { background: var(--surface2); border: 1px solid var(--line); color: var(--ink); transition: border-color .25s, box-shadow .25s; }
         .field:focus { outline: none; border-color: var(--accent2); box-shadow: 0 0 0 4px var(--glow); }
 
+        /* Collections */
+        #collections { scrollbar-width: none; }
+        #collections::-webkit-scrollbar { display: none; }
+        .col-chip { border: 1px solid var(--line); background: var(--surface); color: var(--ink); transition: all .25s ease; white-space: nowrap; }
+        .col-chip:hover { border-color: var(--accent2); }
+        .col-chip.active { background: var(--accent2); color: #fff; border-color: transparent; box-shadow: 0 10px 25px -10px var(--glow); }
+
         /* Liste des wilayas */
         .wl-item { transition: background .15s; }
         .wl-item:hover, .wl-item.active { background: var(--surface2); }
@@ -345,6 +352,8 @@
                     </div>
                 </div>
 
+                <div id="collections" class="hidden flex gap-2 overflow-x-auto pb-3 mb-6"></div>
+
                 <div id="products-container" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6"></div>
             </div>
         </section>
@@ -386,6 +395,13 @@
                 <form id="order-form" onsubmit="handleCheckout(event)" class="space-y-3">
                     <input type="text" id="client-name" placeholder="Nom et prénom" required class="field w-full px-4 py-3 rounded-xl text-sm">
                     <input type="tel" id="client-phone" placeholder="Numéro de téléphone" required class="field w-full px-4 py-3 rounded-xl text-sm">
+
+                    <!-- Marque / modèle du téléphone -->
+                    <div class="relative">
+                        <i data-lucide="smartphone" class="w-4 h-4 absolute left-4 top-1/2 -translate-y-1/2 text-muted pointer-events-none"></i>
+                        <input type="text" id="client-model" placeholder="Ton téléphone (ex : iPhone 13, Samsung A14)" required maxlength="60" autocomplete="off"
+                               class="field w-full pl-11 pr-4 py-3 rounded-xl text-sm">
+                    </div>
 
                     <!-- Choix de la wilaya (recherche + liste) -->
                     <div id="wilaya-box" class="relative">
@@ -502,6 +518,7 @@
         let cart = [];
         try { cart = JSON.parse(localStorage.getItem("cart") || "[]"); } catch (e) { cart = []; }
 
+        let activeCollection = "Tous"; // collection sélectionnée
         let selWilaya = null;      // wilaya choisie (objet de WILAYAS)
         let deliveryType = "home"; // "home" | "desk"
         let wlMatches = [];        // résultats affichés dans la liste
@@ -555,9 +572,47 @@
             renderProducts();
         }
 
+        /* ================= COLLECTIONS ================= */
+        const colOf = (p) => String(p.collection || "").trim();
+
+        function collectionsList() {
+            const map = new Map();
+            products.forEach((p) => {
+                const c = colOf(p);
+                if (!c) return;
+                const k = c.toLowerCase();
+                if (!map.has(k)) map.set(k, { label: c, n: 0 });
+                map.get(k).n++;
+            });
+            return [...map.values()];
+        }
+
+        function renderCollections() {
+            const box = document.getElementById("collections");
+            const cols = collectionsList();
+            if (!cols.length) { box.classList.add("hidden"); activeCollection = "Tous"; return; }
+            if (activeCollection !== "Tous" && !cols.some((c) => c.label.toLowerCase() === activeCollection.toLowerCase())) activeCollection = "Tous";
+            box.classList.remove("hidden");
+            const all = [{ label: "Tous", n: products.length }, ...cols];
+            box.innerHTML = all.map((c) => `
+                <button type="button" data-col="${esc(c.label)}" onclick="setCollection(this.dataset.col)"
+                        class="col-chip ${c.label.toLowerCase() === activeCollection.toLowerCase() ? "active" : ""} px-5 py-2.5 rounded-full text-sm font-bold">
+                    ${esc(c.label)} <span class="opacity-70 text-xs">${c.n}</span>
+                </button>`).join("");
+        }
+
+        function setCollection(label) {
+            activeCollection = label;
+            renderProducts();
+        }
+
         function renderProducts() {
+            renderCollections();
             const q = (document.getElementById("search")?.value || "").trim().toLowerCase();
-            const list = products.filter((p) => !q || (p.name || "").toLowerCase().includes(q) || (p.description || "").toLowerCase().includes(q));
+            const list = products.filter((p) =>
+                (activeCollection === "Tous" || colOf(p).toLowerCase() === activeCollection.toLowerCase()) &&
+                (!q || (p.name || "").toLowerCase().includes(q) || (p.description || "").toLowerCase().includes(q))
+            );
             const box = document.getElementById("products-container");
 
             if (!products.length) {
@@ -581,6 +636,7 @@
                         ${discount ? `<span class="absolute top-3 left-3 px-3 py-1 rounded-full text-xs font-extrabold" style="background:var(--accent2);color:#fff;">-${discount}%</span>` : ""}
                     </div>
                     <div class="flex-1 flex flex-col">
+                        ${colOf(p) ? `<span class="text-[10px] font-extrabold uppercase tracking-[.18em] text-accent mb-1">${esc(colOf(p))}</span>` : ""}
                         <h3 class="font-bold text-lg group-hover:text-[var(--accent2)] transition-colors">${esc(p.name)}</h3>
                         <p class="text-xs text-muted line-clamp-2 mt-1">${esc(p.description || "Accessoire haut de gamme.")}</p>
                         <div class="flex items-center justify-between mt-auto pt-4">
@@ -798,6 +854,9 @@
             const fee = deliveryFee();
             if (fee == null) return toast("Choisis un mode de livraison.", "err");
 
+            const phoneModel = document.getElementById("client-model").value.trim();
+            if (!phoneModel) return toast("Écris le modèle de ton téléphone.", "err");
+
             const btn = document.getElementById("submit-btn");
             const old = btn.textContent;
             btn.disabled = true; btn.textContent = "Envoi en cours...";
@@ -811,7 +870,11 @@
                 wilaya: `${selWilaya.name} — ${modeLabel}`,
                 total_price: subtotal + fee,
                 // la livraison est ajoutée comme ligne d'article pour qu'elle apparaisse dans l'admin
-                items: [...cart, { name: `Livraison ${modeLabel}`, price: fee, qty: 1 }],
+                items: [
+                    ...cart,
+                    { type: "phone", name: phoneModel, price: 0, qty: 1 },
+                    { type: "delivery", name: `Livraison ${modeLabel}`, price: fee, qty: 1 }
+                ],
                 status: "En attente"
             };
 
