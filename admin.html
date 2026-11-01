@@ -241,6 +241,11 @@
                     <label class="text-xs font-bold text-muted uppercase tracking-wider">Description</label>
                     <textarea id="p-desc" rows="3" maxlength="300" class="field w-full mt-1.5 px-4 py-3 rounded-xl text-sm resize-none" placeholder="Courte description du produit"></textarea>
                 </div>
+                <div>
+                    <label class="text-xs font-bold text-muted uppercase tracking-wider">Collection</label>
+                    <input id="p-collection" list="collection-options" maxlength="40" autocomplete="off" class="field w-full mt-1.5 px-4 py-3 rounded-xl text-sm" placeholder="Ex: Anime, Médical, Sport... (choisis ou écris)">
+                    <datalist id="collection-options"></datalist>
+                </div>
                 <div class="grid grid-cols-2 gap-4">
                     <div>
                         <label class="text-xs font-bold text-muted uppercase tracking-wider">Prix (DZD)</label>
@@ -425,7 +430,15 @@
             box.innerHTML = list.map((o, i) => {
                 const color = STATUS_STYLE[o.status] || "#999";
                 const items = Array.isArray(o.items) && o.items.length
-                    ? o.items.map((it) => `<span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-surface2 border border-line text-xs font-semibold">${esc(it.name)} <b class="text-accent">×${esc(it.qty)}</b></span>`).join(" ")
+                    ? o.items.map((it) => {
+                        if (it.type === "phone") {
+                            return `<span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full border text-xs font-extrabold" style="background: var(--accent2); color:#fff; border-color: transparent;"><i data-lucide="smartphone" class="w-3.5 h-3.5"></i>${esc(it.name)}</span>`;
+                        }
+                        if (it.type === "delivery") {
+                            return `<span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-surface2 border border-line text-xs font-semibold"><i data-lucide="truck" class="w-3.5 h-3.5 text-accent"></i>${esc(it.name)} <b class="text-accent">${fmt(it.price)} DZD</b></span>`;
+                        }
+                        return `<span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-surface2 border border-line text-xs font-semibold">${esc(it.name)} <b class="text-accent">×${esc(it.qty)}</b></span>`;
+                    }).join(" ")
                     : `<span class="text-xs text-muted">Détail des articles non disponible</span>`;
                 const date = o.created_at ? new Date(o.created_at).toLocaleString("fr-FR", { dateStyle: "medium", timeStyle: "short" }) : "";
                 const phone = esc(o.phone);
@@ -495,7 +508,9 @@
                             ${p.image_url ? `<img src="${esc(p.image_url)}" class="w-full h-full object-cover">` : `<i data-lucide="smartphone" class="w-6 h-6 text-accent"></i>`}
                         </div>
                         <div class="min-w-0">
-                            <h4 class="font-extrabold text-base truncate">${esc(p.name)}</h4>
+                            <h4 class="font-extrabold text-base truncate">${esc(p.name)}
+                                ${p.collection ? `<span class="ml-2 align-middle px-2.5 py-0.5 rounded-full text-[10px] font-extrabold uppercase tracking-wider" style="background: var(--accent2); color:#fff;">${esc(p.collection)}</span>` : ""}
+                            </h4>
                             <p class="text-xs text-muted truncate mt-0.5">${esc(p.description)}</p>
                             <div class="flex items-center gap-3 mt-1.5 font-bold text-sm text-accent">
                                 ${fmt(p.price)} DZD
@@ -511,10 +526,21 @@
             icons();
         }
 
+        // Propose les collections déjà utilisées + quelques idées
+        function refreshCollectionOptions() {
+            const base = ["Anime", "Médical", "Sport", "Éducation", "Gaming", "Musique", "Cinéma", "Voyage", "Religion", "Humour"];
+            const used = products.map((p) => String(p.collection || "").trim()).filter(Boolean);
+            const seen = new Set();
+            const all = [...used, ...base].filter((c) => { const k = c.toLowerCase(); if (seen.has(k)) return false; seen.add(k); return true; });
+            $("collection-options").innerHTML = all.map((c) => `<option value="${esc(c)}"></option>`).join("");
+        }
+
         function openProductModal(p = null) {
+            refreshCollectionOptions();
             $("p-id").value = p ? p.id : "";
             $("p-name").value = p ? p.name : "";
             $("p-desc").value = p ? (p.description || "") : "";
+            $("p-collection").value = p ? (p.collection || "") : "";
             $("p-price").value = p ? p.price : "";
             $("p-old").value = p ? (p.old_price || "") : "";
             $("p-url").value = p ? (p.image_url || "") : "";
@@ -580,7 +606,8 @@
                 image_url = pub.publicUrl;
             }
 
-            const payload = { name, description, price, old_price, image_url };
+            const collection = $("p-collection").value.trim() || null;
+            const payload = { name, description, collection, price, old_price, image_url };
             let err = null;
 
             if (id) {
