@@ -167,6 +167,45 @@
         .field { background: var(--surface2); border: 1px solid var(--line); color: var(--ink); transition: border-color .25s, box-shadow .25s; }
         .field:focus { outline: none; border-color: var(--accent2); box-shadow: 0 0 0 4px var(--glow); }
 
+        /* ===== Aperçu 3D (téléphone + coque) ===== */
+        .p3-scale { position: relative; width: var(--w, 200px); height: var(--h, 410px); perspective: 1100px; transform-origin: center;
+                    transition: width .6s cubic-bezier(.2,.8,.2,1), height .6s cubic-bezier(.2,.8,.2,1); }
+        .phone3d { position: absolute; inset: 0; transform-style: preserve-3d; will-change: transform; }
+        .p3-layers { position: absolute; inset: 0; transform-style: preserve-3d; }
+        .p3-layer, .p3-face { position: absolute; inset: 0; border-radius: var(--r, 36px); transition: border-radius .6s ease; }
+        .p3-layer { background: var(--edge, #2a2530); }
+        .p3-face { backface-visibility: hidden; -webkit-backface-visibility: hidden; overflow: hidden; }
+        #p3-back { background: linear-gradient(135deg, var(--surface2), var(--surface)); }
+        #p3-img.p3-swap { animation: p3swap .55s cubic-bezier(.2,.8,.2,1); }
+        @keyframes p3swap { from { opacity: 0; transform: scale(1.08); } to { opacity: 1; transform: none; } }
+        .p3-shine { position: absolute; inset: 0; pointer-events: none; border-radius: inherit;
+                    background: linear-gradient(105deg, transparent calc(var(--sx, 50%) - 20%), rgba(255,255,255,.30) var(--sx, 50%), transparent calc(var(--sx, 50%) + 20%));
+                    box-shadow: inset 0 0 0 2.5px rgba(255,255,255,.32), inset 0 0 22px rgba(0,0,0,.28); }
+        .p3-cam { position: absolute; inset: 0; transform-style: preserve-3d; transform: translateZ(10px); pointer-events: none; }
+        .p3-plate { position: absolute; background: linear-gradient(145deg, #1d1d24, #07070a); backface-visibility: hidden;
+                    box-shadow: 0 0 0 2px rgba(255,255,255,.14), 0 8px 16px rgba(0,0,0,.5); }
+        .p3-lens { position: absolute; border-radius: 50%; transform: translateZ(2px); backface-visibility: hidden;
+                   background: radial-gradient(circle at 35% 30%, #7183df 0 7%, #171a2a 28% 58%, #050507 60%);
+                   box-shadow: 0 0 0 3px #2d2d35, 0 0 0 4.5px rgba(255,255,255,.18), 0 3px 7px rgba(0,0,0,.6); }
+        .p3-dot { position: absolute; border-radius: 50%; transform: translateZ(2px); backface-visibility: hidden; background: #2a2a30;
+                  box-shadow: inset 0 0 0 1px rgba(255,255,255,.18); }
+        #p3-front { background: #0a0a0d; box-shadow: inset 0 0 0 2px rgba(255,255,255,.12); }
+        .p3-screen { position: absolute; overflow: hidden; background: var(--wall, linear-gradient(160deg, #6b5a7a, #241a2c)); }
+        .p3-screen::after { content: ""; position: absolute; inset: 0; pointer-events: none;
+                    background: linear-gradient(105deg, transparent calc(var(--sx, 50%) - 22%), rgba(255,255,255,.14) var(--sx, 50%), transparent calc(var(--sx, 50%) + 22%)); }
+        .p3-time { position: absolute; left: 0; right: 0; top: 17%; text-align: center; color: #fff; font-weight: 800; font-size: 46px; line-height: 1; text-shadow: 0 2px 10px rgba(0,0,0,.35); }
+        .p3-date { position: absolute; left: 0; right: 0; top: calc(17% + 54px); text-align: center; color: rgba(255,255,255,.85); font-weight: 600; font-size: 13px; text-transform: capitalize; }
+        .p3-notch { position: absolute; top: 0; left: 50%; transform: translateX(-50%); width: 44%; height: 24px; background: #0a0a0d; border-radius: 0 0 16px 16px; }
+        .p3-island { position: absolute; top: 10px; left: 50%; transform: translateX(-50%); width: 34%; height: 18px; background: #050507; border-radius: 99px; }
+        .p3-drop { position: absolute; top: 0; left: 50%; transform: translateX(-50%); width: 22px; height: 13px; background: #0a0a0d; border-radius: 0 0 14px 14px; }
+        .p3-punch { position: absolute; top: 11px; left: 50%; transform: translateX(-50%); width: 11px; height: 11px; background: #050507; border-radius: 50%; }
+        .p3-home { position: absolute; bottom: 9px; left: 50%; transform: translateX(-50%); width: 30px; height: 30px; border-radius: 50%; border: 2px solid rgba(255,255,255,.28); }
+        .p3-speaker { position: absolute; top: 17px; left: 50%; transform: translateX(-50%); width: 46px; height: 5px; border-radius: 99px; background: #1e1e24; }
+        .p3-shadow { position: absolute; left: 50%; bottom: 26px; width: 170px; height: 18px; margin-left: -85px; border-radius: 50%; background: rgba(0,0,0,.5); filter: blur(10px); pointer-events: none; }
+        .p3-thumb { border: 2px solid var(--line); transition: border-color .25s, transform .2s; }
+        .p3-thumb:hover { transform: translateY(-2px); }
+        .p3-thumb.active { border-color: var(--accent2); box-shadow: 0 0 0 3px var(--glow); }
+
         /* Collections */
         #collections { scrollbar-width: none; }
         #collections::-webkit-scrollbar { display: none; }
@@ -399,7 +438,7 @@
                     <!-- Marque / modèle du téléphone -->
                     <div class="relative">
                         <i data-lucide="smartphone" class="w-4 h-4 absolute left-4 top-1/2 -translate-y-1/2 text-muted pointer-events-none"></i>
-                        <input type="text" id="client-model" placeholder="Ton téléphone (ex : iPhone 13, Samsung A14)" required maxlength="60" autocomplete="off"
+                        <input type="text" id="client-model" placeholder="Ton téléphone (ex : iPhone 13, Samsung A14)" required maxlength="60" autocomplete="off" list="p3-models" oninput="saveModel(this.value)"
                                class="field w-full pl-11 pr-4 py-3 rounded-xl text-sm">
                     </div>
 
@@ -444,6 +483,70 @@
                 </form>
             </div>
         </aside>
+    </div>
+
+    <!-- ============ APERÇU 3D : téléphone + coque ============ -->
+    <div id="preview3d" class="hidden fixed inset-0 z-[65] items-center justify-center p-3 sm:p-4">
+        <div onclick="close3D()" class="absolute inset-0 bg-black/70 backdrop-blur-sm"></div>
+        <div class="relative w-full max-w-4xl max-h-[94vh] overflow-y-auto rounded-3xl border border-line p-4 sm:p-7 grid md:grid-cols-2 gap-6"
+             style="background: var(--bg); box-shadow: var(--shadow);">
+            <button type="button" onclick="close3D()" aria-label="Fermer" class="absolute top-3 right-3 z-10 p-2 rounded-xl hover:bg-surface2 transition hover:rotate-90 duration-300"><i data-lucide="x" class="w-6 h-6"></i></button>
+
+            <!-- Scène 3D -->
+            <div>
+                <div id="stage3d" class="relative h-[360px] sm:h-[460px] rounded-2xl border border-line overflow-hidden select-none flex items-center justify-center"
+                     style="touch-action: none; cursor: grab; background: radial-gradient(circle at 50% 30%, var(--glow), transparent 62%), var(--surface2);">
+                    <div id="p3-scale" class="p3-scale">
+                        <div id="phone3d" class="phone3d">
+                            <div id="p3-layers" class="p3-layers"></div>
+                            <div id="p3-back" class="p3-face" style="transform: translateZ(7px);">
+                                <img id="p3-img" alt="" draggable="false" class="absolute inset-0 w-full h-full object-cover">
+                                <div class="p3-shine"></div>
+                            </div>
+                            <div id="p3-front" class="p3-face" style="transform: rotateY(180deg) translateZ(7px);"></div>
+                            <div id="p3-cam" class="p3-cam"></div>
+                        </div>
+                    </div>
+                    <div id="p3-shadow" class="p3-shadow"></div>
+                    <div class="absolute bottom-3 inset-x-0 text-center text-[11px] font-semibold text-muted pointer-events-none">Glisse pour faire tourner le téléphone</div>
+                </div>
+            </div>
+
+            <!-- Choix -->
+            <div class="flex flex-col gap-4 min-w-0">
+                <div class="pr-10">
+                    <span id="p3-col" class="text-[10px] font-extrabold uppercase tracking-[.18em] text-accent"></span>
+                    <h3 id="p3-title" class="text-2xl font-extrabold leading-tight"></h3>
+                    <div id="p3-price" class="text-2xl font-extrabold text-accent mt-1"></div>
+                </div>
+
+                <div>
+                    <label class="text-xs font-bold uppercase tracking-wider text-muted">Ton téléphone</label>
+                    <div class="relative mt-1.5">
+                        <i data-lucide="smartphone" class="w-4 h-4 absolute left-4 top-1/2 -translate-y-1/2 text-muted pointer-events-none"></i>
+                        <input id="p3-model" type="text" maxlength="60" autocomplete="off" list="p3-models" placeholder="ex : iPhone 11, Samsung A14"
+                               oninput="saveModel(this.value); p3Debounce()" class="field w-full pl-11 pr-4 py-3 rounded-xl text-sm">
+                    </div>
+                    <datalist id="p3-models"></datalist>
+                    <p id="p3-note" class="text-xs text-muted mt-2 leading-relaxed"></p>
+                </div>
+
+                <div class="flex flex-wrap gap-2">
+                    <button type="button" id="p3-b-back" onclick="p3View(0)" class="col-chip px-4 py-2 rounded-full text-xs font-bold">Voir le dos</button>
+                    <button type="button" id="p3-b-front" onclick="p3View(180)" class="col-chip px-4 py-2 rounded-full text-xs font-bold">Voir l'écran</button>
+                    <button type="button" id="p3-b-auto" onclick="p3ToggleAuto()" class="col-chip px-4 py-2 rounded-full text-xs font-bold">Rotation auto</button>
+                </div>
+
+                <div class="min-w-0">
+                    <p class="text-xs font-bold uppercase tracking-wider text-muted mb-2">Choisis ta coque</p>
+                    <div id="p3-thumbs" class="flex gap-2 overflow-x-auto pb-2"></div>
+                </div>
+
+                <button type="button" id="p3-add" onclick="p3Add()" class="btn-shine mt-auto w-full py-4 rounded-xl font-bold bg-accent hover:scale-[1.02] active:scale-95 transition-transform">
+                    Ajouter au panier
+                </button>
+            </div>
+        </div>
     </div>
 
     <div id="toasts" class="fixed bottom-5 left-1/2 -translate-x-1/2 z-[80] flex flex-col items-center gap-2 pointer-events-none"></div>
@@ -637,8 +740,13 @@
                     : `<div class="w-full h-full flex items-center justify-center text-accent" style="background: linear-gradient(135deg, var(--surface2), var(--surface));"><i data-lucide="smartphone" class="w-16 h-16 opacity-60"></i></div>`;
                 return `
                 <article class="reveal group card-glow tilt relative rounded-3xl p-4 bg-surface border border-line hover:border-[var(--accent2)] flex flex-col" style="--d:${(i % 4) * 90}ms" data-tilt>
-                    <div class="relative aspect-square rounded-2xl overflow-hidden mb-4 bg-surface2">
+                    <div class="relative aspect-square rounded-2xl overflow-hidden mb-4 bg-surface2 cursor-pointer" onclick="open3D('${esc(p.id)}')">
                         ${img}
+                        <button type="button" onclick="event.stopPropagation(); open3D('${esc(p.id)}')" aria-label="Aperçu 3D sur mon téléphone"
+                                class="absolute bottom-3 right-3 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-extrabold border border-line backdrop-blur-xl hover:scale-105 active:scale-95 transition-transform"
+                                style="background: color-mix(in srgb, var(--surface) 82%, transparent); color: var(--ink);">
+                            <i data-lucide="box" class="w-3.5 h-3.5 text-accent"></i> Aperçu 3D
+                        </button>
                         ${discount ? `<span class="absolute top-3 left-3 px-3 py-1 rounded-full text-xs font-extrabold" style="background:var(--accent2);color:#fff;">-${discount}%</span>` : ""}
                     </div>
                     <div class="flex-1 flex flex-col">
@@ -928,6 +1036,498 @@
             toggleCart();
         }
 
+        /* ================= APERÇU 3D (téléphone + coque) ================= */
+        const P3_T = 14; // épaisseur du téléphone en px
+        const P3 = { open: false, id: null, x: 0, y: 0, baseY: 0, auto: true, drag: false, snap: false,
+                     resumeAt: 0, raf: 0, tok: 0, lx: 0, ly: 0, dt: 0, prof: null, list: [], bound: false };
+        const P3_SUGGEST = [
+            "iPhone 6", "iPhone 7", "iPhone 7 Plus", "iPhone 8", "iPhone 8 Plus", "iPhone X", "iPhone XR", "iPhone XS Max", "iPhone SE",
+            "iPhone 11", "iPhone 11 Pro", "iPhone 11 Pro Max", "iPhone 12", "iPhone 12 mini", "iPhone 12 Pro", "iPhone 12 Pro Max",
+            "iPhone 13", "iPhone 13 mini", "iPhone 13 Pro", "iPhone 13 Pro Max", "iPhone 14", "iPhone 14 Plus", "iPhone 14 Pro", "iPhone 14 Pro Max",
+            "iPhone 15", "iPhone 15 Plus", "iPhone 15 Pro", "iPhone 15 Pro Max", "iPhone 16", "iPhone 16 Plus", "iPhone 16 Pro", "iPhone 16 Pro Max",
+            "iPhone 17", "iPhone Air", "iPhone 17 Pro", "iPhone 17 Pro Max",
+            "iPhone 18", "iPhone 18 Pro", "iPhone 18 Pro Max",
+            "Samsung A03", "Samsung A04", "Samsung A05", "Samsung A12", "Samsung A13", "Samsung A14", "Samsung A15", "Samsung A22", "Samsung A23", "Samsung A24",
+            "Samsung A25", "Samsung A32", "Samsung A33", "Samsung A34", "Samsung A35", "Samsung A52", "Samsung A53", "Samsung A54", "Samsung A55", "Samsung A73",
+            "Samsung S21", "Samsung S22", "Samsung S23", "Samsung S23 Ultra", "Samsung S24", "Samsung S24 Ultra", "Samsung S25", "Samsung S25 Ultra",
+            "Samsung M14", "Samsung M34", "Samsung Z Flip",
+            "Redmi 9", "Redmi 10", "Redmi 12", "Redmi 13", "Redmi 12C", "Redmi A2", "Redmi Note 9", "Redmi Note 10", "Redmi Note 11", "Redmi Note 12",
+            "Redmi Note 12 Pro", "Redmi Note 13", "Redmi Note 13 Pro", "Poco X5", "Poco X6 Pro", "Poco F5", "Xiaomi 13", "Xiaomi 14",
+            "Huawei P30", "Huawei P40", "Huawei P50", "Huawei P60", "Huawei Mate 40", "Huawei Mate 50", "Huawei Nova 9", "Huawei Nova 11", "Huawei Y9",
+            "Honor X8", "Honor 90", "Honor Magic 5", "Oppo A57", "Oppo Reno 8", "Realme C55", "Realme 11", "Vivo Y21",
+            "Infinix Hot 30", "Infinix Note 30", "Tecno Spark 10", "Tecno Camon 20", "OnePlus 11", "Pixel 7", "Pixel 8"
+        ];
+        const P3_REDUCED = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+        // Le modèle tapé est partagé entre l'aperçu 3D et le panier
+        function saveModel(v) {
+            try { localStorage.setItem("phoneModel", v); } catch (e) {}
+            const a = document.getElementById("client-model"); if (a && a.value !== v) a.value = v;
+            const b = document.getElementById("p3-model"); if (b && b.value !== v) b.value = v;
+        }
+        function prefillModel() {
+            let v = "";
+            try { v = localStorage.getItem("phoneModel") || ""; } catch (e) {}
+            if (v) document.getElementById("client-model").value = v;
+        }
+
+        // ---------- Base des téléphones : taille réelle (mm), écran, caméras ----------
+        const P3_MM = 2.66; // pixels par millimètre
+        const pf = (wmm, hmm, r, screen, cam, family) => ({ w: Math.round(wmm * P3_MM), h: Math.round(hmm * P3_MM), r, screen, cam, family });
+
+        function iphoneProfile(s) {
+            const big = /max|plus/.test(s), pro = /pro/.test(s), mini = /mini/.test(s), air = /\bair\b/.test(s);
+            if (/xs\s*max/.test(s)) return pf(77.4, 157.5, 30, "notch", "dual", "iPhone XS Max");
+            if (/\bxr\b/.test(s)) return pf(75.7, 150.9, 30, "notch", "single", "iPhone XR");
+            const m = s.match(/\bi\s?ph?on?e?\s*(\d+)/);
+            const n = m ? parseInt(m[1], 10) : 0;
+            if (!n && /\bx(s)?\b/.test(s)) return pf(70.9, 143.6, 30, "notch", "dual", "iPhone X / XS");
+            if (/\bse\b/.test(s) || (n > 0 && n <= 8)) {
+                if (big && n > 0) return pf(78.1, 158.4, 28, "home", "dual", `iPhone ${n} Plus`);
+                return pf(67.3, 138.4, 28, "home", "single", /\bse\b/.test(s) ? "iPhone SE" : `iPhone ${n}`);
+            }
+            if (air) return pf(74.7, 156.2, 32, "island", "bar1", "iPhone Air");
+            if (!n) return pf(71.5, 146.7, 30, "notch", "dual", "iPhone");
+            const fam = `iPhone ${n}${mini ? " mini" : ""}${pro ? " Pro" : ""}${/max/.test(s) ? " Max" : ""}${/plus/.test(s) ? " Plus" : ""}`;
+            if (n === 10) return pf(70.9, 143.6, 30, "notch", "dual", "iPhone X");
+            if (n === 11) {
+                if (pro) return big ? pf(77.8, 158, 30, "notch", "triple", fam) : pf(71.4, 144, 30, "notch", "triple", fam);
+                return pf(75.7, 150.9, 30, "notch", "dual", fam);
+            }
+            if (n === 12 || n === 13) {
+                if (mini) return pf(64.2, 131.5, 28, "notch", "dual", fam);
+                const cam = pro ? "triple" : "dual";
+                return big ? pf(78.1, 160.8, 30, "notch", cam, fam) : pf(71.5, 146.7, 30, "notch", cam, fam);
+            }
+            if (/16e/.test(s)) return pf(71.5, 146.7, 30, "notch", "single", "iPhone 16e");
+            if (air && n >= 17) return pf(74.7, 156.2, 32, "island", "bar1", "iPhone Air");
+            // [largeur, hauteur, écran, caméras] pour base / plus / pro / pro max
+            const T = {
+                14: { b: [71.5, 146.7, "notch", "dual"], bg: [78.1, 160.8, "notch", "dual"], p: [71.5, 147.5, "island", "triple"], pm: [77.6, 160.7, "island", "triple"] },
+                15: { b: [71.6, 147.6, "island", "dual"], bg: [77.8, 160.9, "island", "dual"], p: [70.6, 146.6, "island", "triple"], pm: [76.7, 159.9, "island", "triple"] },
+                16: { b: [71.6, 147.6, "island", "dualV"], bg: [77.8, 160.9, "island", "dualV"], p: [71.5, 149.6, "island", "triple"], pm: [77.6, 163, "island", "triple"] },
+                17: { b: [71.5, 149.6, "island", "dualV"], bg: [78, 163, "island", "dualV"], p: [71.9, 150, "island", "bar3"], pm: [78, 163.4, "island", "bar3"] },
+                18: { b: [71.5, 149.6, "island", "dualV"], bg: [78, 163, "island", "dualV"], p: [71.9, 150, "island", "bar3"], pm: [78, 163.4, "island", "bar3"] }
+            };
+            const row = T[Math.min(Math.max(n, 14), 18)];
+            const key = pro ? (big ? "pm" : "p") : (big ? "bg" : "b");
+            const [w, h, screen, cam] = row[key];
+            return pf(w, h, 30, screen, cam, fam);
+        }
+
+        function samsungProfile(s, raw) {
+            let m;
+            if (/flip/.test(s)) return pf(72, 166, 30, "punch", "samsung2", "Galaxy Z Flip");
+            if (/fold/.test(s)) return pf(73, 158, 26, "punch", "samsung", "Galaxy Z Fold");
+            const ultra = /ultra/.test(s), plus = /plus/.test(s) || raw.includes("+");
+            if ((m = s.match(/\bs\s?(\d{1,2})\b/))) {
+                const n = parseInt(m[1], 10), fam = `Galaxy S${n}${ultra ? " Ultra" : plus ? " Plus" : ""}`;
+                if (n <= 9) return pf(69.9, 147.7, 30, "home", "single", fam);
+                if (ultra) return pf(77.9, 163.3, 22, "punch", "samsung4", fam);
+                if (plus) return pf(75.8, 157.8, 34, "punch", "samsung", fam);
+                return pf(70.9, 146.3, 36, "punch", "samsung", fam);
+            }
+            if ((m = s.match(/\bnote\s?(\d+)/))) return pf(76.7, 161.6, 26, "punch", "samsung", "Galaxy Note " + m[1]);
+            if ((m = s.match(/\ba\s?(\d)(\d)/))) {
+                const d = parseInt(m[1], 10), fam = "Galaxy A" + m[1] + m[2];
+                if (d === 0) return pf(76, 164, 26, "drop", "samsung2", fam);
+                if (d === 1) return pf(77, 167, 26, "drop", "samsung", fam);
+                if (d === 2) return pf(76.5, 165, 26, "drop", "samsung", fam);
+                if (d === 3) return pf(77.5, 161.5, 28, "punch", "samsung", fam);
+                if (d === 5) return pf(77, 159, 28, "punch", "samsung", fam);
+                if (d === 7) return pf(77.5, 164, 28, "punch", "samsung", fam);
+                return pf(77, 163, 28, "punch", "samsung", fam);
+            }
+            if ((m = s.match(/\b([mf])\s?(\d{2})\b/))) return pf(76.5, 165, 26, "drop", "samsung", "Galaxy " + m[1].toUpperCase() + m[2]);
+            if ((m = s.match(/\bj\s?(\d)/))) return pf(75, 152, 18, "home", "single", "Galaxy J" + m[1]);
+            return pf(75, 160, 28, "punch", "samsung", "Samsung Galaxy");
+        }
+
+        function xiaomiProfile(s) {
+            let m;
+            if (/poco/.test(s)) {
+                const mm = /\bm\s?\d/.test(s), c = /\bc\s?\d/.test(s);
+                return pf(76, 165.5, 28, (mm || c) ? "drop" : "punch", c ? "generic" : (mm ? "pill3" : "squareQuad"), "Poco");
+            }
+            if ((m = s.match(/redmi\s*note\s?(\d+)/))) {
+                const n = parseInt(m[1], 10), pro = /pro|plus/.test(s);
+                return pf(pro ? 76.5 : 76, pro ? 164 : 165.5, 26, n <= 8 ? "drop" : "punch", (n >= 11 && pro) ? "squareQuad" : "pill3", `Redmi Note ${n}${pro ? " Pro" : ""}`);
+            }
+            if ((m = s.match(/redmi\s*a\s?(\d)/))) return pf(76.4, 165, 24, "drop", "generic", "Redmi A" + m[1]);
+            if ((m = s.match(/redmi\s*(\d+)\s?c\b/))) return pf(77, 168, 24, "drop", "generic", `Redmi ${m[1]}C`);
+            if ((m = s.match(/redmi\s*(\d+)/))) {
+                const n = parseInt(m[1], 10);
+                return pf(76.5, 167, 26, n <= 9 ? "drop" : "punch", n >= 12 ? "squareQuad" : "pill3", "Redmi " + n);
+            }
+            if (/ultra/.test(s)) return pf(75, 162.5, 34, "punch", "circle", "Xiaomi Ultra");
+            if ((m = s.match(/(?:xiaomi|\bmi)\s*(\d+)/))) return pf(71.5, 152, 34, "punch", "squareQuad", "Xiaomi " + m[1]);
+            return pf(76, 165, 26, "punch", "pill3", "Xiaomi / Redmi");
+        }
+
+        function huaweiProfile(s) {
+            let m;
+            if ((m = s.match(/\bmate\s?(\d+)/))) {
+                const n = parseInt(m[1], 10);
+                return n <= 20 ? pf(72.3, 157.8, 28, "notch", "squareQuad", "Huawei Mate " + n) : pf(75.5, 162, 34, "punch", "circle", "Huawei Mate " + n);
+            }
+            if ((m = s.match(/\bp\s?(\d{2})\b/))) {
+                const n = parseInt(m[1], 10);
+                return n <= 30 ? pf(73, 155, 28, "drop", "pill3", "Huawei P" + n) : pf(72.5, 158, 32, "punch", "circle", "Huawei P" + n);
+            }
+            if ((m = s.match(/\bnova\s?(\d+)/))) return pf(74, 160, 28, "punch", parseInt(m[1], 10) >= 9 ? "squareQuad" : "pill3", "Huawei Nova " + m[1]);
+            if ((m = s.match(/\by\s?(\d+)/))) return pf(76, 164, 26, "drop", "generic", "Huawei Y" + m[1]);
+            if (/enjoy/.test(s)) return pf(76, 164, 26, "drop", "generic", "Huawei Enjoy");
+            return pf(74, 158, 28, "punch", "pill3", "Huawei");
+        }
+
+        function otherProfile(s) {
+            let m;
+            if (/honor/.test(s)) {
+                if (/magic|\b(70|80|90|100|200)\b/.test(s)) return pf(75, 163, 34, "punch", "circle", "Honor Magic / série 70-200");
+                if (/\bx\s?\d/.test(s)) return pf(75.5, 165, 26, "punch", "squareQuad", "Honor X");
+                return pf(74.5, 160, 28, "punch", "pill3", "Honor");
+            }
+            if (/oppo|\breno|find\s?x/.test(s)) {
+                if (/\breno/.test(s)) return pf(74, 160, 32, "punch", "pill3", "Oppo Reno");
+                if (/find/.test(s)) return pf(75, 164, 34, "punch", "circle", "Oppo Find");
+                if ((m = s.match(/\ba\s?(\d)(\d)/))) return pf(75.5, 164, 26, parseInt(m[1], 10) <= 1 ? "drop" : "punch", "generic", "Oppo A" + m[1] + m[2]);
+                return pf(75, 163, 28, "punch", "pill3", "Oppo");
+            }
+            if (/realme/.test(s)) {
+                if (/\bc\s?\d/.test(s)) return pf(75.5, 165, 24, "drop", "generic", "Realme C");
+                if (/narzo/.test(s)) return pf(75, 164, 26, "punch", "pill3", "Realme Narzo");
+                if (/\bgt/.test(s)) return pf(75, 163, 32, "punch", "circle", "Realme GT");
+                return pf(74.5, 163, 28, "punch", "squareQuad", "Realme");
+            }
+            if (/vivo/.test(s)) {
+                if (/\by\s?\d/.test(s)) return pf(76, 164, 26, "drop", "pill3", "Vivo Y");
+                return pf(74.5, 164, 32, "punch", "squareQuad", "Vivo V / X");
+            }
+            if (/infinix|\bhot\s?\d/.test(s)) {
+                if (/hot/.test(s)) return pf(76.5, 168, 26, "punch", "generic", "Infinix Hot");
+                if (/smart/.test(s)) return pf(76, 166, 24, "drop", "single", "Infinix Smart");
+                if (/note|zero/.test(s)) return pf(76, 168, 26, "punch", "squareQuad", "Infinix Note / Zero");
+                return pf(76, 167, 26, "punch", "pill3", "Infinix");
+            }
+            if (/tecno|\bspark|camon|\bpova|phantom/.test(s)) {
+                if (/camon/.test(s)) return pf(76, 167, 26, "punch", "squareQuad", "Tecno Camon");
+                if (/phantom/.test(s)) return pf(75, 165, 30, "punch", "circle", "Tecno Phantom");
+                return pf(76, 167, 26, "punch", "pill3", "Tecno Spark / Pova");
+            }
+            if (/\bitel/.test(s)) return pf(75, 162, 22, "drop", "single", "itel");
+            if (/oneplus|one plus/.test(s)) {
+                if (/nord/.test(s)) return pf(73.5, 160, 32, "punch", "pill3", "OnePlus Nord");
+                return pf(74, 163, 34, "punch", "circle", "OnePlus");
+            }
+            if (/pixel|google/.test(s)) {
+                const proxl = /pro|xl/.test(s);
+                return pf(proxl ? 76.6 : 72.5, proxl ? 162.8 : 153, 34, "punch", "bar", "Google Pixel");
+            }
+            if (/moto|lenovo/.test(s)) return pf(75.5, 164, 26, "punch", "pill3", "Motorola");
+            if (/nokia/.test(s)) return pf(75, 160, 24, "drop", "single", "Nokia");
+            return null;
+        }
+
+        function phoneProfile(text) {
+            const raw = String(text || "").toLowerCase();
+            const s = norm(text);
+            if (!s) return pf(71.5, 146.7, 46, "notch", "dual", "");
+
+            // iPhone (accepte aussi les fautes : iphon, ipone...)
+            if (/\bi\s?ph?on?e?\b/.test(s) || /\bapple\b/.test(s)) return iphoneProfile(s);
+
+            // marques écrites en toutes lettres
+            if (/huawei/.test(s)) return huaweiProfile(s);
+            if (/xiaomi|redmi|poco/.test(s) || /\bmi\s?\d/.test(s)) return xiaomiProfile(s);
+            if (/samsung|galaxy/.test(s)) return samsungProfile(s, raw);
+            const o = otherProfile(s);
+            if (o) return o;
+
+            // modèles écrits sans la marque
+            if (/\bnova\s?\d|\bmate\s?\d|\bp\s?\d{2}\b/.test(s)) return huaweiProfile(s);
+            const nn = s.match(/\bnote\s?(\d+)/);
+            if (nn) return parseInt(nn[1], 10) <= 13 ? xiaomiProfile("redmi " + s) : samsungProfile(s, raw);
+            if (/^a\s?\d{2}\w*$|^s\s?\d{1,2}\b|^[mf]\s?\d{2}\b|\bz\s?(flip|fold)/.test(s)) return samsungProfile(s, raw);
+            if (/\bc\s?\d{2}\b/.test(s)) return otherProfile("realme " + s);
+            return pf(75, 160, 28, "punch", "generic", "");
+        }
+
+        const p3lens = (x, y, s) => `<div class="p3-lens" style="left:${x}px;top:${y}px;width:${s}px;height:${s}px"></div>`;
+        const p3dot = (x, y, s, c) => `<div class="p3-dot" style="left:${x}px;top:${y}px;width:${s}px;height:${s}px;${c ? "background:" + c : ""}"></div>`;
+        const p3plate = (x, y, w, h, r) => `<div class="p3-plate" style="left:${x}px;top:${y}px;width:${w}px;height:${h}px;border-radius:${r}px"></div>`;
+
+        function p3CamHTML(prof) {
+            const flash = "#f3e7b8", w = prof.w;
+            switch (prof.cam) {
+                case "dual":       // iPhone 11 à 15 : 2 caméras en diagonale
+                    return p3plate(10, 10, 82, 82, 22) + p3lens(18, 18, 32) + p3lens(52, 52, 32) + p3dot(62, 20, 12, flash);
+                case "triple":     // iPhone Pro : 3 caméras en triangle
+                    return p3plate(10, 10, 86, 86, 24) + p3lens(17, 17, 30) + p3lens(17, 53, 30) + p3lens(51, 35, 30) + p3dot(64, 17, 11, flash);
+                case "dualV":      // iPhone 16 / 16 Plus : 2 caméras en pilule verticale
+                    return p3plate(14, 12, 50, 98, 25) + p3lens(23, 20, 32) + p3lens(23, 62, 32) + p3dot(72, 26, 9, flash);
+                case "bar2":       // iPhone 17 / 18 : plateau horizontal, 2 caméras
+                    return p3plate(6, 12, w - 12, 70, 20) + p3lens(Math.round(w * .10), 21, 34) + p3lens(Math.round(w * .10) + 44, 21, 34) + p3dot(w - 46, 36, 12, flash);
+                case "bar3":       // iPhone 17 Pro / 18 Pro : plateau pleine largeur, 3 caméras en triangle
+                    return p3plate(6, 10, w - 12, 100, 22) + p3lens(Math.round(w * .09), 16, 34) + p3lens(Math.round(w * .09), 58, 34) + p3lens(Math.round(w * .09) + 42, 37, 34) + p3dot(w - 46, 24, 12, flash) + p3dot(w - 46, 64, 10);
+                case "bar1":       // iPhone Air : plateau avec 1 caméra
+                    return p3plate(6, 12, w - 12, 60, 20) + p3lens(Math.round(w * .12), 20, 34) + p3dot(w - 44, 34, 11, flash);
+                case "single":
+                    return p3lens(16, 16, 30) + p3dot(54, 20, 10, flash);
+                case "samsung2":
+                    return p3lens(16, 16, 30) + p3lens(16, 54, 30) + p3dot(56, 24, 8, flash);
+                case "samsung":    // Samsung A / S : 3 objectifs en colonne
+                    return p3lens(16, 16, 30) + p3lens(16, 54, 30) + p3lens(16, 92, 30) + p3dot(56, 24, 8, flash);
+                case "samsung4":   // Samsung S Ultra : 4 objectifs
+                    return p3lens(16, 16, 30) + p3lens(16, 54, 30) + p3lens(16, 92, 30) + p3lens(16, 130, 30) + p3dot(56, 24, 8, flash) + p3dot(56, 62, 8);
+                case "pill3":      // Redmi Note, Huawei P30, Infinix... : bloc vertical avec 3 objectifs
+                    return p3plate(12, 12, 56, 128, 28) + p3lens(24, 22, 32) + p3lens(24, 60, 32) + p3lens(24, 98, 32) + p3dot(80, 20, 9, flash);
+                case "squareQuad": // bloc carré (Xiaomi, Redmi Pro, Vivo, Realme...)
+                    return p3plate(10, 10, 92, 92, 22) + p3lens(18, 18, 32) + p3lens(18, 56, 32) + p3lens(56, 18, 32) + p3dot(64, 64, 16, flash);
+                case "circle":     // Huawei P/Mate, OnePlus, Honor Magic : gros cercle
+                    return p3plate(10, 10, 92, 92, 46) + p3lens(26, 24, 28) + p3lens(24, 60, 28) + p3lens(58, 42, 28) + p3dot(62, 24, 8, flash);
+                case "bar": {      // Google Pixel : barre sur toute la largeur
+                    const x = Math.round(w * 0.2);
+                    return p3plate(0, 74, w, 46, 0) + p3lens(x, 80, 34) + p3lens(x + 48, 80, 34) + p3dot(Math.round(w * 0.78), 92, 10, flash);
+                }
+                default:           // Android générique : bloc vertical à 2 objectifs (aussi iPhone X, 7+/8+, 16)
+                    return p3plate(12, 12, 52, 100, 26) + p3lens(22, 22, 30) + p3lens(22, 62, 30) + p3dot(36, 100, 8, flash);
+            }
+        }
+
+        function p3FrontHTML(prof) {
+            const home = prof.screen === "home";
+            const inset = home ? "42px 8px 50px 8px" : "9px";
+            const rad = home ? 6 : Math.max(prof.r - 8, 14);
+            const now = new Date();
+            const time = now.toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" });
+            const date = now.toLocaleDateString("fr-FR", { weekday: "long", day: "numeric", month: "long" });
+            const extra = { notch: `<div class="p3-notch"></div>`, island: `<div class="p3-island"></div>`,
+                            drop: `<div class="p3-drop"></div>`, punch: `<div class="p3-punch"></div>`, home: "" }[prof.screen] || "";
+            return `
+                ${home ? `<div class="p3-speaker"></div><div class="p3-home"></div>` : ""}
+                <div class="p3-screen" style="inset:${inset};border-radius:${rad}px">
+                    ${extra}
+                    <div class="p3-time">${esc(time)}</div>
+                    <div class="p3-date">${esc(date)}</div>
+                </div>`;
+        }
+
+        function p3Fit() {
+            const st = document.getElementById("stage3d"), sc = document.getElementById("p3-scale");
+            if (!st || !P3.prof) return;
+            const k = Math.min(1, (st.clientHeight - 70) / P3.prof.h, (st.clientWidth - 40) / P3.prof.w);
+            sc.style.transform = `scale(${Math.max(k, 0.3)})`;
+        }
+
+        function p3Update() {
+            const text = document.getElementById("p3-model").value.trim();
+            const prof = phoneProfile(text);
+            P3.prof = prof;
+            const sc = document.getElementById("p3-scale");
+            sc.style.setProperty("--w", prof.w + "px");
+            sc.style.setProperty("--h", prof.h + "px");
+            sc.style.setProperty("--r", prof.r + "px");
+            document.getElementById("p3-cam").innerHTML = p3CamHTML(prof);
+            document.getElementById("p3-front").innerHTML = p3FrontHTML(prof);
+            document.getElementById("p3-note").textContent = !text
+                ? "Écris ton modèle (ex : iPhone 11, Samsung A14, Redmi Note 12) pour adapter l'aperçu."
+                : (prof.family
+                    ? `Détecté : ${prof.family}. Aperçu approximatif, ta coque sera fabriquée pour ton modèle exact.`
+                    : "Modèle non reconnu : forme de téléphone générique. Ta coque sera fabriquée pour ton modèle exact.");
+            p3Fit();
+        }
+        function p3Debounce() { clearTimeout(P3.dt); P3.dt = setTimeout(p3Update, 150); }
+
+        // Couleurs de la coque : bords du téléphone et fond d'écran
+        function p3Colors(url) {
+            const st = document.getElementById("stage3d");
+            const set = (r, g, b) => {
+                const c = (f) => `rgb(${Math.min(255, Math.round(r * f))},${Math.min(255, Math.round(g * f))},${Math.min(255, Math.round(b * f))})`;
+                st.style.setProperty("--edge", c(0.7));
+                st.style.setProperty("--wall", `linear-gradient(160deg, ${c(1.15)}, ${c(0.4)})`);
+            };
+            set(70, 52, 80);
+            if (!url) return;
+            const tok = ++P3.tok;
+            const im = new Image();
+            im.crossOrigin = "anonymous";
+            im.onload = () => {
+                if (tok !== P3.tok) return;
+                try {
+                    const cv = document.createElement("canvas"); cv.width = cv.height = 16;
+                    const cx = cv.getContext("2d"); cx.drawImage(im, 0, 0, 16, 16);
+                    const d = cx.getImageData(0, 0, 16, 16).data;
+                    let r = 0, g = 0, b = 0, n = 0;
+                    for (let i = 0; i < d.length; i += 4) { r += d[i]; g += d[i + 1]; b += d[i + 2]; n++; }
+                    set(r / n, g / n, b / n);
+                } catch (e) { /* image protégée : on garde les couleurs par défaut */ }
+            };
+            im.src = url;
+        }
+
+        // Isole la coque : enlève le cadre noir du vrai téléphone, le fond, et efface le trou de caméra de la photo
+        function p3Prepare(url, img) {
+            const tok = P3.ptok = (P3.ptok || 0) + 1;
+            const im = new Image();
+            im.crossOrigin = "anonymous";
+            im.onload = () => {
+                if (tok !== P3.ptok) return;
+                try {
+                    const W = im.naturalWidth, H = im.naturalHeight;
+                    const sc = Math.min(1, 900 / Math.max(W, H));
+                    const w = Math.round(W * sc), h = Math.round(H * sc);
+                    const cv = document.createElement("canvas"); cv.width = w; cv.height = h;
+                    const cx = cv.getContext("2d");
+                    cx.drawImage(im, 0, 0, w, h);
+                    // 1) efface le trou de caméra de la photo (haut gauche) avec la matière de la coque juste en dessous
+                    const hx = Math.round(w * .13), hy = Math.round(h * .08), hw = Math.round(w * .34), hh = Math.round(h * .22);
+                    cx.save(); cx.filter = "blur(2px)";
+                    cx.drawImage(cv, hx, hy + hh + Math.round(h * .01), hw, hh, hx, hy, hw, hh);
+                    cx.restore();
+                    // 2) ne garde que la coque, au format d'un téléphone (enlève cadre noir, table, fond)
+                    const cw = Math.round(w * .70), ch = Math.min(Math.round(cw / 0.47), Math.round(h * .74));
+                    const cl = Math.round(w * .14), ct = Math.round(h * .08);
+                    const out = document.createElement("canvas"); out.width = cw; out.height = ch;
+                    out.getContext("2d").drawImage(cv, cl, ct, cw, ch, 0, 0, cw, ch);
+                    if (tok === P3.ptok) img.src = out.toDataURL("image/jpeg", 0.9);
+                } catch (e) { /* image protégée : on garde la photo telle quelle */ }
+            };
+            im.src = url;
+        }
+
+        function p3SetProduct(p) {
+            P3.id = p.id;
+            const img = document.getElementById("p3-img");
+            if (p.image_url) { img.style.display = ""; img.src = p.image_url; p3Prepare(p.image_url, img); } else { img.style.display = "none"; img.removeAttribute("src"); }
+            img.classList.remove("p3-swap"); void img.offsetWidth; img.classList.add("p3-swap");
+            document.getElementById("p3-title").textContent = p.name || "";
+            document.getElementById("p3-col").textContent = colOf(p);
+            document.getElementById("p3-price").textContent = `${fmt(p.price)} DZD`;
+            p3Colors(p.image_url);
+            document.querySelectorAll("#p3-thumbs .p3-thumb").forEach((b) => b.classList.toggle("active", String(b.dataset.id) === String(p.id)));
+        }
+        function p3Select(id) {
+            const p = products.find((x) => String(x.id) === String(id));
+            if (p) p3SetProduct(p);
+        }
+
+        function p3Ctl() {
+            document.getElementById("p3-b-back").classList.toggle("active", P3.baseY === 0);
+            document.getElementById("p3-b-front").classList.toggle("active", P3.baseY === 180);
+            document.getElementById("p3-b-auto").classList.toggle("active", P3.auto);
+        }
+        function p3View(deg) { P3.baseY = deg; P3.snap = true; P3.resumeAt = 0; p3Ctl(); }
+        function p3ToggleAuto() { P3.auto = !P3.auto; P3.snap = !P3.auto; p3Ctl(); }
+
+        function p3Frame(ts) {
+            if (!P3.open) return;
+            P3.raf = requestAnimationFrame(p3Frame);
+            if (!P3.drag) {
+                if (P3.auto && ts > P3.resumeAt) {
+                    const t = ts / 1000;
+                    P3.y += (P3.baseY + Math.sin(t * 0.9) * 32 - P3.y) * 0.06;
+                    P3.x += (Math.cos(t * 0.7) * 6 - P3.x) * 0.06;
+                } else if (P3.snap) {
+                    P3.y += (P3.baseY - P3.y) * 0.1;
+                    P3.x += (0 - P3.x) * 0.1;
+                    if (Math.abs(P3.y - P3.baseY) < 0.3 && Math.abs(P3.x) < 0.3) P3.snap = false;
+                }
+            }
+            document.getElementById("phone3d").style.transform = `rotateX(${P3.x}deg) rotateY(${P3.y}deg)`;
+            const st = document.getElementById("stage3d");
+            st.style.setProperty("--sx", (50 + Math.sin(P3.y * Math.PI / 180) * 70) + "%");
+            document.getElementById("p3-shadow").style.transform = `scaleX(${1 - Math.abs(Math.sin(P3.y * Math.PI / 180)) * 0.4})`;
+        }
+
+        function p3Bind() {
+            if (P3.bound) return;
+            P3.bound = true;
+            const st = document.getElementById("stage3d");
+            st.addEventListener("pointerdown", (e) => {
+                P3.drag = true; P3.snap = false; P3.lx = e.clientX; P3.ly = e.clientY;
+                st.style.cursor = "grabbing";
+                try { st.setPointerCapture(e.pointerId); } catch (err) {}
+            });
+            st.addEventListener("pointermove", (e) => {
+                if (!P3.drag) return;
+                P3.y += (e.clientX - P3.lx) * 0.6;
+                P3.x = Math.max(-35, Math.min(35, P3.x - (e.clientY - P3.ly) * 0.4));
+                P3.lx = e.clientX; P3.ly = e.clientY;
+            });
+            const end = () => {
+                if (!P3.drag) return;
+                P3.drag = false; st.style.cursor = "grab";
+                const m = ((P3.y % 360) + 360) % 360;
+                P3.baseY = Math.abs(m - 180) < 90 ? 180 : 0;
+                let a = P3.y - P3.baseY;
+                a = ((a + 180) % 360 + 360) % 360 - 180;
+                P3.y = P3.baseY + a;
+                P3.resumeAt = performance.now() + 2200;
+                P3.snap = !P3.auto;
+                p3Ctl();
+            };
+            st.addEventListener("pointerup", end);
+            st.addEventListener("pointercancel", end);
+            window.addEventListener("resize", () => { if (P3.open) p3Fit(); });
+            document.addEventListener("keydown", (e) => { if (e.key === "Escape" && P3.open) close3D(); });
+        }
+
+        function open3D(id) {
+            const p = products.find((x) => String(x.id) === String(id));
+            if (!p) return;
+            p3Bind();
+
+            // épaisseur du téléphone : des tranches empilées donnent des bords arrondis
+            const layers = document.getElementById("p3-layers");
+            if (!layers.children.length) {
+                let h = "";
+                for (let i = 0; i <= P3_T; i++) h += `<div class="p3-layer" style="transform:translateZ(${i - P3_T / 2}px)"></div>`;
+                layers.innerHTML = h;
+            }
+            document.getElementById("p3-models").innerHTML = P3_SUGGEST.map((m) => `<option value="${esc(m)}"></option>`).join("");
+
+            // coques proposées : celles de la collection affichée
+            P3.list = products.filter((q) => activeCollection === "Tous" || sameCol(colOf(q), activeCollection));
+            if (!P3.list.some((q) => String(q.id) === String(p.id))) P3.list.unshift(p);
+            document.getElementById("p3-thumbs").innerHTML = P3.list.map((q) => `
+                <button type="button" data-id="${esc(q.id)}" onclick="p3Select(this.dataset.id)" aria-label="${esc(q.name)}"
+                        class="p3-thumb shrink-0 w-14 h-20 rounded-xl overflow-hidden bg-surface2 flex items-center justify-center">
+                    ${q.image_url ? `<img src="${esc(q.image_url)}" alt="" loading="lazy" class="w-full h-full object-cover" draggable="false">` : `<i data-lucide="smartphone" class="w-5 h-5 text-accent"></i>`}
+                </button>`).join("");
+
+            let saved = "";
+            try { saved = localStorage.getItem("phoneModel") || ""; } catch (e) {}
+            document.getElementById("p3-model").value = document.getElementById("client-model").value || saved;
+
+            P3.open = true; P3.y = 25; P3.x = 0; P3.baseY = 0; P3.auto = !P3_REDUCED; P3.snap = P3_REDUCED;
+            const m = document.getElementById("preview3d");
+            m.classList.remove("hidden"); m.classList.add("flex");
+            document.body.style.overflow = "hidden";
+            p3SetProduct(p);
+            p3Ctl();
+            icons();
+            requestAnimationFrame(() => {
+                p3Update();
+                document.querySelector("#p3-thumbs .p3-thumb.active")?.scrollIntoView({ block: "nearest", inline: "center" });
+            });
+            cancelAnimationFrame(P3.raf);
+            P3.raf = requestAnimationFrame(p3Frame);
+        }
+
+        function close3D() {
+            P3.open = false;
+            cancelAnimationFrame(P3.raf);
+            const m = document.getElementById("preview3d");
+            m.classList.add("hidden"); m.classList.remove("flex");
+            if (document.getElementById("cart-drawer").classList.contains("opacity-0")) document.body.style.overflow = "";
+        }
+
+        function p3Add() {
+            if (P3.id == null) return;
+            addToCart(P3.id);
+            close3D();
+        }
+
         let io;
         function observeReveals() {
             if (!io) {
@@ -990,6 +1590,8 @@
             bindTilt();
             updateCartUI();
             fetchProducts();
+            prefillModel();
+            p3Bind();
             setTimeout(countUp, 500);
             onScroll();
         });
