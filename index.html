@@ -576,7 +576,7 @@
         /* ================= COLLECTIONS ================= */
         // Collections toujours affichées (modifie cette liste comme tu veux).
         // Les collections que tu écris dans l'admin s'ajoutent automatiquement.
-        const DEFAULT_COLLECTIONS = ["Anime", "Médical", "Sport", "Éducation", "Gaming", "Musique"];
+        const DEFAULT_COLLECTIONS = ["Anime", "Sport", "Voiture", "Médical", "Éducation", "Gaming", "Musique"];
 
         const colOf = (p) => String(p.collection || "").trim();
         const sameCol = (a, b) => norm(a) === norm(b);
@@ -630,7 +630,7 @@
                 return;
             }
 
-            box.innerHTML = list.map((p, i) => {
+            const card = (p, i) => {
                 const discount = p.old_price && p.old_price > p.price ? Math.round((1 - p.price / p.old_price) * 100) : 0;
                 const img = p.image_url
                     ? `<img src="${esc(p.image_url)}" alt="${esc(p.name)}" loading="lazy" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700">`
@@ -657,7 +657,34 @@
                         </div>
                     </div>
                 </article>`;
-            }).join("");
+            };
+
+            let html = "";
+            if (activeCollection === "Tous") {
+                // Vue "Tous" : les articles sont séparés par collection, une section après l'autre
+                const groups = [];
+                collectionsList().forEach((c) => {
+                    const items = list.filter((p) => sameCol(colOf(p), c.label));
+                    if (items.length) groups.push({ label: c.label, items });
+                });
+                const rest = list.filter((p) => !colOf(p));
+                const sectioned = groups.length > 0;
+                if (rest.length) groups.push({ label: "Autres", items: rest, other: true });
+
+                html = groups.map((g) => {
+                    const header = sectioned ? `
+                        <div class="col-span-full flex items-center gap-4 pt-8 first:pt-0">
+                            <h3 class="text-2xl sm:text-3xl font-extrabold">${esc(g.label)}</h3>
+                            <span class="px-3 py-0.5 rounded-full text-xs font-bold border border-line bg-surface text-muted">${g.items.length}</span>
+                            <div class="flex-1 h-px" style="background: var(--line)"></div>
+                            ${g.other ? "" : `<button type="button" data-col="${esc(g.label)}" onclick="setCollection(this.dataset.col)" class="text-sm font-bold text-accent hover:text-[var(--accent2)] transition-colors">Voir tout →</button>`}
+                        </div>` : "";
+                    return header + g.items.map(card).join("");
+                }).join("");
+            } else {
+                html = list.map(card).join("");
+            }
+            box.innerHTML = html;
 
             icons();
             observeReveals();
