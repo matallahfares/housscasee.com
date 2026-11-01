@@ -352,7 +352,7 @@
                     </div>
                 </div>
 
-                <div id="collections" class="hidden flex gap-2 overflow-x-auto pb-3 mb-6"></div>
+                <div id="collections" class="flex gap-2 overflow-x-auto md:flex-wrap md:overflow-visible pb-3 mb-6"></div>
 
                 <div id="products-container" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6"></div>
             </div>
@@ -556,6 +556,7 @@
         }
 
         async function fetchProducts() {
+            renderCollections();
             skeletons();
             if (!SUPABASE_READY) {
                 products = [];
@@ -573,14 +574,20 @@
         }
 
         /* ================= COLLECTIONS ================= */
+        // Collections toujours affichées (modifie cette liste comme tu veux).
+        // Les collections que tu écris dans l'admin s'ajoutent automatiquement.
+        const DEFAULT_COLLECTIONS = ["Anime", "Médical", "Sport", "Éducation", "Gaming", "Musique"];
+
         const colOf = (p) => String(p.collection || "").trim();
+        const sameCol = (a, b) => norm(a) === norm(b);
 
         function collectionsList() {
             const map = new Map();
+            DEFAULT_COLLECTIONS.forEach((c) => map.set(norm(c), { label: c, n: 0 }));
             products.forEach((p) => {
                 const c = colOf(p);
                 if (!c) return;
-                const k = c.toLowerCase();
+                const k = norm(c);
                 if (!map.has(k)) map.set(k, { label: c, n: 0 });
                 map.get(k).n++;
             });
@@ -589,15 +596,12 @@
 
         function renderCollections() {
             const box = document.getElementById("collections");
-            const cols = collectionsList();
-            if (!cols.length) { box.classList.add("hidden"); activeCollection = "Tous"; return; }
-            if (activeCollection !== "Tous" && !cols.some((c) => c.label.toLowerCase() === activeCollection.toLowerCase())) activeCollection = "Tous";
+            const all = [{ label: "Tous", n: products.length }, ...collectionsList()];
             box.classList.remove("hidden");
-            const all = [{ label: "Tous", n: products.length }, ...cols];
             box.innerHTML = all.map((c) => `
                 <button type="button" data-col="${esc(c.label)}" onclick="setCollection(this.dataset.col)"
-                        class="col-chip ${c.label.toLowerCase() === activeCollection.toLowerCase() ? "active" : ""} px-5 py-2.5 rounded-full text-sm font-bold">
-                    ${esc(c.label)} <span class="opacity-70 text-xs">${c.n}</span>
+                        class="col-chip ${sameCol(c.label, activeCollection) ? "active" : ""} px-5 py-2.5 rounded-full text-sm font-bold">
+                    ${esc(c.label)}${c.n ? ` <span class="opacity-70 text-xs">${c.n}</span>` : ""}
                 </button>`).join("");
         }
 
@@ -610,7 +614,7 @@
             renderCollections();
             const q = (document.getElementById("search")?.value || "").trim().toLowerCase();
             const list = products.filter((p) =>
-                (activeCollection === "Tous" || colOf(p).toLowerCase() === activeCollection.toLowerCase()) &&
+                (activeCollection === "Tous" || sameCol(colOf(p), activeCollection)) &&
                 (!q || (p.name || "").toLowerCase().includes(q) || (p.description || "").toLowerCase().includes(q))
             );
             const box = document.getElementById("products-container");
@@ -620,7 +624,9 @@
                 return;
             }
             if (!list.length) {
-                box.innerHTML = `<p class="col-span-full text-center py-16 text-muted">Aucun résultat pour « ${esc(q)} ».</p>`;
+                box.innerHTML = q
+                    ? `<p class="col-span-full text-center py-16 text-muted">Aucun résultat pour « ${esc(q)} ».</p>`
+                    : `<p class="col-span-full text-center py-16 text-muted">Aucun modèle dans la collection « ${esc(activeCollection)} » pour le moment. Reviens bientôt !</p>`;
                 return;
             }
 
