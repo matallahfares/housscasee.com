@@ -1077,19 +1077,19 @@
 
         function iphoneProfile(s) {
             const big = /max|plus/.test(s), pro = /pro/.test(s), mini = /mini/.test(s), air = /\bair\b/.test(s);
-            if (/xs\s*max/.test(s)) return pf(77.4, 157.5, 30, "notch", "dual", "iPhone XS Max");
+            if (/xs\s*max/.test(s)) return pf(77.4, 157.5, 30, "notch", "dualV", "iPhone XS Max");
             if (/\bxr\b/.test(s)) return pf(75.7, 150.9, 30, "notch", "single", "iPhone XR");
             const m = s.match(/\bi\s?ph?on?e?\s*(\d+)/);
             const n = m ? parseInt(m[1], 10) : 0;
-            if (!n && /\bx(s)?\b/.test(s)) return pf(70.9, 143.6, 30, "notch", "dual", "iPhone X / XS");
+            if (!n && /\bx(s)?\b/.test(s)) return pf(70.9, 143.6, 30, "notch", "dualV", "iPhone X / XS");
             if (/\bse\b/.test(s) || (n > 0 && n <= 8)) {
-                if (big && n > 0) return pf(78.1, 158.4, 28, "home", "dual", `iPhone ${n} Plus`);
+                if (big && n > 0) return pf(78.1, 158.4, 28, "home", "dualH", `iPhone ${n} Plus`);
                 return pf(67.3, 138.4, 28, "home", "single", /\bse\b/.test(s) ? "iPhone SE" : `iPhone ${n}`);
             }
             if (air) return pf(74.7, 156.2, 32, "island", "bar1", "iPhone Air");
             if (!n) return pf(71.5, 146.7, 30, "notch", "dual", "iPhone");
             const fam = `iPhone ${n}${mini ? " mini" : ""}${pro ? " Pro" : ""}${/max/.test(s) ? " Max" : ""}${/plus/.test(s) ? " Plus" : ""}`;
-            if (n === 10) return pf(70.9, 143.6, 30, "notch", "dual", "iPhone X");
+            if (n === 10) return pf(70.9, 143.6, 30, "notch", "dualV", "iPhone X");
             if (n === 11) {
                 if (pro) return big ? pf(77.8, 158, 30, "notch", "triple", fam) : pf(71.4, 144, 30, "notch", "triple", fam);
                 return pf(75.7, 150.9, 30, "notch", "dual", fam);
@@ -1257,12 +1257,19 @@
         const p3plate = (x, y, w, h, r) => `<div class="p3-plate" style="left:${x}px;top:${y}px;width:${w}px;height:${h}px;border-radius:${r}px"></div>`;
 
         function p3CamHTML(prof) {
+            // Fond noir sous les caméras : cache le trou de caméra (de l'iPhone) présent sur la photo de la coque
+            const cover = p3plate(5, 5, Math.round(prof.w * .52), Math.round(prof.h * .33), 26);
+            return cover + p3CamInner(prof);
+        }
+        function p3CamInner(prof) {
             const flash = "#f3e7b8", w = prof.w;
             switch (prof.cam) {
                 case "dual":       // iPhone 11 à 15 : 2 caméras en diagonale
                     return p3plate(10, 10, 82, 82, 22) + p3lens(18, 18, 32) + p3lens(52, 52, 32) + p3dot(62, 20, 12, flash);
                 case "triple":     // iPhone Pro : 3 caméras en triangle
                     return p3plate(10, 10, 86, 86, 24) + p3lens(17, 17, 30) + p3lens(17, 53, 30) + p3lens(51, 35, 30) + p3dot(64, 17, 11, flash);
+                case "dualH":      // iPhone 7 Plus / 8 Plus : 2 caméras côte à côte
+                    return p3plate(12, 12, 78, 40, 20) + p3lens(18, 17, 30) + p3lens(54, 17, 30) + p3dot(100, 20, 9, flash) + p3dot(100, 36, 5);
                 case "dualV":      // iPhone 16 / 16 Plus : 2 caméras en pilule verticale
                     return p3plate(14, 12, 50, 98, 25) + p3lens(23, 20, 32) + p3lens(23, 62, 32) + p3dot(72, 26, 9, flash);
                 case "bar2":       // iPhone 17 / 18 : plateau horizontal, 2 caméras
@@ -1365,7 +1372,8 @@
             im.src = url;
         }
 
-        // Isole la coque : enlève le cadre noir du vrai téléphone, le fond, et efface le trou de caméra de la photo
+        // Isole la coque : trouve la zone "dessin" de la photo (enlève cadre noir, table, fond), efface le trou de caméra
+        // de la photo (haut gauche de la coque) et recadre au format du téléphone choisi.
         function p3Prepare(url, img) {
             const tok = P3.ptok = (P3.ptok || 0) + 1;
             const im = new Image();
@@ -1374,22 +1382,38 @@
                 if (tok !== P3.ptok) return;
                 try {
                     const W = im.naturalWidth, H = im.naturalHeight;
-                    const sc = Math.min(1, 900 / Math.max(W, H));
-                    const w = Math.round(W * sc), h = Math.round(H * sc);
-                    const cv = document.createElement("canvas"); cv.width = w; cv.height = h;
-                    const cx = cv.getContext("2d");
-                    cx.drawImage(im, 0, 0, w, h);
-                    // 1) efface le trou de caméra de la photo (haut gauche) avec la matière de la coque juste en dessous
-                    const hx = Math.round(w * .13), hy = Math.round(h * .08), hw = Math.round(w * .34), hh = Math.round(h * .22);
-                    cx.save(); cx.filter = "blur(2px)";
-                    cx.drawImage(cv, hx, hy + hh + Math.round(h * .01), hw, hh, hx, hy, hw, hh);
-                    cx.restore();
-                    // 2) ne garde que la coque, au format d'un téléphone (enlève cadre noir, table, fond)
-                    const cw = Math.round(w * .70), ch = Math.min(Math.round(cw / 0.47), Math.round(h * .74));
-                    const cl = Math.round(w * .14), ct = Math.round(h * .08);
+                    // --- 1) zone de la coque : cadrage central (cadre noir, table et fond retirés)
+                    let sx = W * .14, sy = H * .08, sw = W * .70, sh = H * .74;
+                    // --- 2) travail en haute qualité
+                    const sc = Math.min(1, 1400 / Math.max(sw, sh));
+                    const cw0 = Math.round(sw * sc), ch0 = Math.round(sh * sc);
+                    let cv = document.createElement("canvas"); cv.width = cw0; cv.height = ch0;
+                    let cx = cv.getContext("2d", { willReadFrequently: true });
+                    cx.imageSmoothingQuality = "high";
+                    cx.drawImage(im, sx, sy, sw, sh, 0, 0, cw0, ch0);
+                    // --- 3) enlève le cadre noir restant sur les bords (noir pur et uni uniquement), 12 % max par côté
+                    const dd = cx.getImageData(0, 0, cw0, ch0).data;
+                    const isBlack = (x, y) => { const i = (y * cw0 + x) * 4; return dd[i] < 28 && dd[i + 1] < 28 && dd[i + 2] < 28; };
+                    const rowBlack = (y) => { let n = 0, t = 0; for (let x = Math.round(cw0 * .1); x < cw0 * .9; x += 2) { t++; if (isBlack(x, y)) n++; } return n / t > 0.92; };
+                    const colBlack = (x) => { let n = 0, t = 0; for (let y = Math.round(ch0 * .1); y < ch0 * .9; y += 2) { t++; if (isBlack(x, y)) n++; } return n / t > 0.92; };
+                    let t0 = 0, b0 = ch0 - 1, l0 = 0, r0 = cw0 - 1;
+                    while (t0 < ch0 * .12 && rowBlack(t0)) t0++;
+                    while (b0 > ch0 * .88 && rowBlack(b0)) b0--;
+                    while (l0 < cw0 * .12 && colBlack(l0)) l0++;
+                    while (r0 > cw0 * .88 && colBlack(r0)) r0--;
+                    const m = 4; t0 += m; b0 -= m; l0 += m; r0 -= m;
+                    const bw = r0 - l0 + 1, bh = b0 - t0 + 1;
+                    const base = document.createElement("canvas"); base.width = bw; base.height = bh;
+                    const bx = base.getContext("2d"); bx.imageSmoothingQuality = "high";
+                    bx.drawImage(cv, l0, t0, bw, bh, 0, 0, bw, bh);
+                    // --- 4) recadre au format téléphone, sans déformer
+                    const ratio = 0.47;
+                    let cw = bw, ch = bh, cl = 0, ct = 0;
+                    if (bw / bh > ratio) { cw = Math.round(bh * ratio); cl = Math.round((bw - cw) / 2); } else { ch = Math.round(bw / ratio); }
                     const out = document.createElement("canvas"); out.width = cw; out.height = ch;
-                    out.getContext("2d").drawImage(cv, cl, ct, cw, ch, 0, 0, cw, ch);
-                    if (tok === P3.ptok) img.src = out.toDataURL("image/jpeg", 0.9);
+                    const ox = out.getContext("2d"); ox.imageSmoothingQuality = "high";
+                    ox.drawImage(base, cl, ct, cw, ch, 0, 0, cw, ch);
+                    if (tok === P3.ptok) img.src = out.toDataURL("image/jpeg", 0.95);
                 } catch (e) { /* image protégée : on garde la photo telle quelle */ }
             };
             im.src = url;
