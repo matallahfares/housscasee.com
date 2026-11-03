@@ -390,6 +390,41 @@
         #cur-dot { width: 7px; height: 7px; margin: -3.5px 0 0 -3.5px; background: var(--accent2); }
         #fx-canvas, #confetti { position: fixed; inset: 0; pointer-events: none; }
         #fx-canvas { z-index: 0; opacity: .75; } #confetti { z-index: 250; }
+
+        /* ===== Histoire 3D (vue éclatée au défilement) ===== */
+        #story { position: relative; height: 420vh; }
+        .st-sticky { position: sticky; top: 0; height: 100vh; display: grid; grid-template-columns: 1fr 1fr; align-items: center; gap: 24px; max-width: 1150px; margin: 0 auto; padding: 0 24px; }
+        .st-text { position: relative; height: 320px; }
+        .st-step { position: absolute; inset: 0; display: flex; flex-direction: column; justify-content: center; gap: 14px; opacity: 0; transform: translateY(40px) rotateX(-20deg); filter: blur(8px);
+                   transition: opacity .7s ease, transform .8s cubic-bezier(.2,.9,.25,1.1), filter .7s ease; pointer-events: none; }
+        .st-step.on { opacity: 1; transform: none; filter: none; pointer-events: auto; }
+        .st-step span { font-size: 12px; font-weight: 800; letter-spacing: .25em; text-transform: uppercase; color: var(--accent2); }
+        .st-step h2 { font-size: clamp(2rem, 4.6vw, 3.6rem); font-weight: 800; line-height: 1.05; }
+        .st-step p { color: var(--muted); font-size: 1.05rem; line-height: 1.65; max-width: 30rem; }
+        .st-cta { align-self: flex-start; margin-top: 8px; padding: 14px 26px; border-radius: 16px; font-weight: 800; color: #fff; background: var(--accent2); box-shadow: 0 16px 36px -12px var(--glow); transition: transform .3s cubic-bezier(.3,1.6,.5,1); }
+        .st-cta:hover { transform: scale(1.06) translateY(-2px); }
+        .st-dots { position: absolute; left: 0; bottom: -40px; display: flex; gap: 8px; }
+        .st-dots i { width: 10px; height: 10px; border-radius: 99px; background: var(--line); transition: all .4s cubic-bezier(.3,1.6,.5,1); }
+        .st-dots i.on { width: 34px; background: var(--accent2); }
+        #st-stage { position: relative; height: 640px; perspective: 1500px; }
+        #st-phone { position: absolute; left: 50%; top: 50%; width: 190px; height: 390px; margin: -195px 0 0 -95px; transform-style: preserve-3d; will-change: transform; }
+        #st-body, .st-l { position: absolute; inset: 0; transform-style: preserve-3d; border-radius: 30px; will-change: transform; }
+        #st-body .p3-layer { background: #2a2530; border-radius: 30px; }
+        .st-l { backface-visibility: visible; }
+        #st-rim { border: 9px solid rgba(255,255,255,.38); background: linear-gradient(145deg, rgba(255,255,255,.10), rgba(255,255,255,.02)); box-shadow: inset 0 0 18px rgba(255,255,255,.25), 0 0 0 2px rgba(255,255,255,.18); }
+        #st-art { overflow: hidden; border-radius: 26px; box-shadow: 0 20px 50px -18px rgba(0,0,0,.7); }
+        #st-art img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+        #st-gloss { pointer-events: none; background: linear-gradient(115deg, rgba(255,255,255,.34) 0%, rgba(255,255,255,0) 38%, rgba(255,255,255,.12) 70%, rgba(255,255,255,0) 100%); box-shadow: inset 0 0 0 2px rgba(255,255,255,.35); }
+        .st-labels { position: absolute; right: 0; top: 50%; transform: translateY(-50%); display: flex; flex-direction: column; gap: 52px; pointer-events: none; }
+        .st-labels b { display: block; padding: 8px 16px; border-radius: 99px; font-size: 12px; font-weight: 800; white-space: nowrap; border: 1px solid var(--line); opacity: 0; transform: translateX(24px);
+                       background: color-mix(in srgb, var(--surface) 86%, transparent); backdrop-filter: blur(10px); transition: opacity .5s ease, transform .6s cubic-bezier(.3,1.5,.5,1); }
+        .st-labels b.on { opacity: 1; transform: none; }
+        @media (max-width: 820px) {
+            #story { height: 380vh; }
+            .st-sticky { grid-template-columns: 1fr; grid-template-rows: 50% 50%; padding: 70px 18px 0; gap: 0; align-items: start; }
+            #st-stage { grid-row: 1; height: 100%; transform: scale(.72); } .st-text { grid-row: 2; height: 100%; }
+            .st-labels { display: none; } .st-dots { bottom: 6px; }
+        }
     </style>
 </head>
 
@@ -508,6 +543,27 @@
                 <p class="reveal text-muted mt-3" style="--d:180ms">Glisse pour tourner, clique sur une coque pour l'essayer sur ton téléphone.</p>
             </div>
             <div id="g3-wrap"><div id="g3-ring"></div><div id="g3-glow"></div></div>
+        </section>
+
+        <!-- ===== Histoire 3D au défilement : vue éclatée ===== -->
+        <section id="story">
+            <div class="st-sticky">
+                <div class="st-text">
+                    <div class="st-step on" data-i="0"><span>01 — Design</span><h2>Choisis ton style</h2><p>Anime, sport, voiture, médical, gaming… des dizaines de designs exclusifs pour que ton téléphone te ressemble.</p></div>
+                    <div class="st-step" data-i="1"><span>02 — Fabrication</span><h2>Une coque en 4 couches</h2><p>Coque anti-chocs transparente, impression HD, finition brillante, découpes précises pour ton modèle exact.</p></div>
+                    <div class="st-step" data-i="2"><span>03 — Livraison</span><h2>Chez toi, partout en Algérie</h2><p>58 wilayas, à domicile ou en Stop Desk. Tu choisis, on s'occupe du reste.</p><a href="#shop" class="st-cta">Voir le catalogue →</a></div>
+                    <div class="st-dots"><i class="on"></i><i></i><i></i></div>
+                </div>
+                <div id="st-stage">
+                    <div id="st-phone">
+                        <div id="st-body"></div>
+                        <div class="st-l" id="st-rim"></div>
+                        <div class="st-l" id="st-art"><img alt="" draggable="false"></div>
+                        <div class="st-l" id="st-gloss"></div>
+                    </div>
+                    <div class="st-labels"><b data-k="3">Finition brillante</b><b data-k="2">Ton design en HD</b><b data-k="1">Coque anti-chocs</b><b data-k="0">Ton téléphone</b></div>
+                </div>
+            </div>
         </section>
 
         <section class="py-6 border-y border-line overflow-hidden" style="background: color-mix(in srgb, var(--surface) 60%, transparent);">
@@ -2146,6 +2202,57 @@
                 for (let i = 0; i < n; i++) { const a = (((i * 360 / n + rot) % 360) + 540) % 360 - 180, f = Math.abs(a) / 180; items[i].style.filter = `brightness(${(1 - f * .6).toFixed(2)})`; items[i].style.opacity = (1 - f * .35).toFixed(2); }
             })();
         } catch (e) {}
+    })();
+    </script>
+
+    <script>
+    /* ===== Histoire 3D : vue éclatée pilotée par le défilement ===== */
+    (function () {
+        const sec = document.getElementById("story"); if (!sec) return;
+        const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+        const phone = document.getElementById("st-phone"), body = document.getElementById("st-body");
+        const rim = document.getElementById("st-rim"), art = document.getElementById("st-art"), gloss = document.getElementById("st-gloss");
+        const img = art.querySelector("img"), steps = [...sec.querySelectorAll(".st-step")], dots = [...sec.querySelectorAll(".st-dots i")], labels = [...sec.querySelectorAll(".st-labels b")];
+        // corps du téléphone : tranches + caméras
+        const prof = (typeof phoneProfile === "function") ? phoneProfile("iPhone 15 Pro") : null;
+        let h = ""; for (let i = 0; i <= 10; i++) h += `<div class="p3-layer" style="transform:translateZ(${i - 5}px)"></div>`;
+        if (prof) h += `<div class="p3-cam" style="transform:translateZ(8px)">${p3CamHTML(prof)}</div>`;
+        body.innerHTML = h;
+        let url = "";
+        const setArt = () => {
+            const l = (typeof products !== "undefined" ? products : []).filter((p) => p.image_url);
+            const u = l.length ? l[Math.min(1, l.length - 1)].image_url : "";
+            if (!u) { if (!url) { url = "x"; img.src = "housscase_.jpg"; } return; }
+            if (u === url) return; url = u; img.src = u; try { p3Prepare(u, img); } catch (e) {}
+        };
+        setArt(); const poll = setInterval(() => { setArt(); if (url && url !== "x") clearInterval(poll); }, 800);
+
+        const ease = (t) => t * t * (3 - 2 * t), clamp = (v, a = 0, b = 1) => Math.min(b, Math.max(a, v));
+        let cur = 0, vis = false, last = -1;
+        new IntersectionObserver((e) => { vis = e[0].isIntersecting; }).observe(sec);
+        const progress = () => { const r = sec.getBoundingClientRect(), total = sec.offsetHeight - innerHeight; return clamp(-r.top / total); };
+        (function loop() {
+            requestAnimationFrame(loop); if (!vis) return;
+            const target = progress(); cur += (target - cur) * (reduced ? 1 : .09);
+            const p = cur;
+            // étape 1 : face avant qui s'incline ; 2 : éclaté ; 3 : réassemblé qui tourne et grossit
+            const e = ease(clamp((p - .22) / .16)) * (1 - ease(clamp((p - .62) / .14)));
+            const iso = ease(clamp((p - .2) / .2)) * (1 - ease(clamp((p - .62) / .16)));
+            const spin = ease(clamp((p - .66) / .34)) * 360;
+            const ry = -28 * (1 - ease(clamp(p / .2))) + 12 * Math.sin(p * 9) * (1 - iso) + iso * 22 + spin;
+            const rx = iso * 58 + (1 - iso) * Math.sin(p * 6) * 6;
+            const rz = iso * -32;
+            const sc = 1 + ease(clamp((p - .66) / .3)) * .35 - iso * .12;
+            phone.style.transform = `translateY(${(1 - ease(clamp(p / .08))) * 80}px) rotateX(${rx}deg) rotateY(${ry}deg) rotateZ(${rz}deg) scale(${sc})`;
+            const D = 118;
+            body.style.transform = `translateZ(${-D * e * 1.0}px)`;
+            rim.style.transform = `translateZ(${-D * e * .05 + 4}px)`;
+            art.style.transform = `translateZ(${D * e * .75 + 7}px)`;
+            gloss.style.transform = `translateZ(${D * e * 1.5 + 10}px)`;
+            labels.forEach((b) => b.classList.toggle("on", e > .55));
+            const si = p < .3 ? 0 : p < .64 ? 1 : 2;
+            if (si !== last) { last = si; steps.forEach((el, i) => el.classList.toggle("on", i === si)); dots.forEach((el, i) => el.classList.toggle("on", i === si)); }
+        })();
     })();
     </script>
 </body>
