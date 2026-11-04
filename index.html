@@ -1,6 +1,24 @@
 <!DOCTYPE html>
 <html lang="fr" class="scroll-smooth">
 <head>
+    <script>
+    /* Niveau de performance : 0 = complet, 1 = moyen, 2 = léger. Détection auto + surveillance du FPS (voir fin de page). */
+    (function () {
+        var n = navigator, c = n.hardwareConcurrency || 4, m = n.deviceMemory || 4, sd = n.connection && n.connection.saveData;
+        var coarse = false, qs = location.search;
+        try { coarse = matchMedia("(pointer:coarse)").matches; } catch (e) {}
+        var tier = 0;
+        if (coarse) tier = 1;
+        if (c <= 4 || m <= 2 || sd) tier = Math.max(tier, c <= 2 || m <= 2 ? 2 : 1);
+        var saved = null; try { saved = localStorage.getItem("perfTier"); } catch (e) {}
+        if (saved !== null && saved !== "" && !isNaN(+saved)) tier = Math.max(tier, +saved);
+        var forced = null; try { forced = localStorage.getItem("perfForce"); } catch (e) {}
+        if (forced !== null && forced !== "" && !isNaN(+forced)) tier = +forced;
+        if (/[?&]lite\b/.test(qs)) tier = 2; if (/[?&]full\b/.test(qs)) tier = 0;
+        window.__PERF = { tier: tier, set: function (t) { this.tier = t; var h = document.documentElement; h.classList.remove("perf-1", "perf-2"); if (t) h.classList.add("perf-" + t); } };
+        window.__PERF.set(tier);
+    })();
+    </script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>HousseCase | More than just a case</title>
@@ -377,7 +395,8 @@
         #g3-glow { position: absolute; left: 50%; bottom: 20px; width: 70%; height: 60px; margin-left: -35%; border-radius: 50%; pointer-events: none;
                    background: radial-gradient(ellipse, var(--glow), transparent 70%); filter: blur(14px); }
         .g3-card { position: absolute; width: 190px; height: 390px; margin: -195px 0 0 -95px; border-radius: 32px; overflow: hidden; background: var(--surface2);
-                   border: 2px solid rgba(255,255,255,.28); box-shadow: 0 30px 60px -20px rgba(0,0,0,.65); -webkit-box-reflect: below 10px linear-gradient(transparent 70%, rgba(255,255,255,.18)); }
+                   border: 2px solid rgba(255,255,255,.28); box-shadow: 0 30px 60px -20px rgba(0,0,0,.65); }
+        html:not(.perf-1):not(.perf-2) .g3-card { -webkit-box-reflect: below 10px linear-gradient(transparent 70%, rgba(255,255,255,.18)); }
         .g3-card img.art { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
         .g3-card::after { content: ""; position: absolute; inset: 0; pointer-events: none; background: linear-gradient(115deg, transparent 30%, rgba(255,255,255,.22) 48%, transparent 62%); background-size: 250% 100%; animation: g3shine 5s ease-in-out infinite; }
         @keyframes g3shine { 0%, 40% { background-position: 150% 0; } 100% { background-position: -100% 0; } }
@@ -425,6 +444,34 @@
             #st-stage { grid-row: 1; height: 100%; transform: scale(.72); } .st-text { grid-row: 2; height: 100%; }
             .st-labels { display: none; } .st-dots { bottom: 6px; }
         }
+
+        /* ===== Performance : allègement automatique selon l'appareil ===== */
+        .blob { filter: none !important; -webkit-mask-image: radial-gradient(circle, #000 0%, transparent 68%); mask-image: radial-gradient(circle, #000 0%, transparent 68%); }
+        html.perf-1 .grain::after, html.perf-2 .grain::after, html.perf-1 #cursor-glow, html.perf-2 #cursor-glow { display: none !important; }
+        html.perf-1 #bg3d, html.perf-2 #bg3d, html.perf-1 #fx-canvas, html.perf-2 #fx-canvas, html.perf-1 #cur-ring, html.perf-2 #cur-ring, html.perf-1 #cur-dot, html.perf-2 #cur-dot { display: none !important; }
+        html.perf-1 .reveal, html.perf-2 .reveal { filter: none !important; transition: opacity .5s ease, transform .5s ease !important; transform: translateY(22px) !important; }
+        html.perf-1 .reveal.in, html.perf-2 .reveal.in { transform: none !important; }
+        html.perf-1 .st-step, html.perf-2 .st-step { filter: none !important; }
+        html.perf-1 .g3-card, html.perf-2 .g3-card { -webkit-box-reflect: none; }
+        html.perf-1 .g3-card::after, html.perf-2 .g3-card::after, html.perf-1 .p3-aura, html.perf-2 .p3-aura, html.perf-1 .p3-ring, html.perf-2 .p3-ring, html.perf-1 .p3-spark, html.perf-2 .p3-spark,
+        html.perf-1 .h3-ring, html.perf-2 .h3-ring, html.perf-1 .h3-floor, html.perf-2 .h3-floor, html.perf-1 .p3-lens::after, html.perf-2 .p3-lens::after { display: none !important; animation: none !important; }
+        html.perf-1 .blob, html.perf-2 .blob { animation: none !important; }
+        html.perf-1 .p3-shadow, html.perf-2 .p3-shadow, html.perf-1 #g3-glow, html.perf-2 #g3-glow { filter: none !important; }
+        html.perf-1 .backdrop-blur-xl, html.perf-1 .backdrop-blur-sm, html.perf-2 .backdrop-blur-xl, html.perf-2 .backdrop-blur-sm, html.perf-2 .st-labels b { backdrop-filter: none !important; -webkit-backdrop-filter: none !important; }
+        html.perf-2 #cart-drawer > div:first-child, html.perf-2 #preview3d > div:first-child { backdrop-filter: none !important; background: rgba(0,0,0,.78) !important; }
+        /* cartes à plat (moins de couches GPU) */
+        html.perf-1 article.card-glow, html.perf-2 article.card-glow { transform-style: flat !important; }
+        html.perf-1 article.card-glow .aspect-square, html.perf-2 article.card-glow .aspect-square, html.perf-1 article.card-glow h3, html.perf-2 article.card-glow h3,
+        html.perf-1 article.card-glow .text-xl, html.perf-2 article.card-glow .text-xl, html.perf-1 article.card-glow button[aria-label="Ajouter au panier"], html.perf-2 article.card-glow button[aria-label="Ajouter au panier"],
+        html.perf-1 .tilt > .w-14, html.perf-2 .tilt > .w-14, html.perf-1 .tilt > h3, html.perf-2 .tilt > h3 { transform: none !important; }
+        html.perf-2 .float-a, html.perf-2 .float-b, html.perf-2 .grad-text, html.perf-2 .p3-cta::after, html.perf-2 .btn-shine::after, html.perf-2 #to-top.show, html.perf-2 #splash img { animation: none !important; }
+        html.perf-2 .h3-ph:not(:first-child) { display: none !important; }
+        html.perf-2 #hero3d { height: 470px; }
+        html.perf-2 #g3-wrap { height: 470px; }
+        html.perf-2 #p3-float, html.perf-2 #phone3d { will-change: auto; }
+        #perf-btn { position: fixed; left: 14px; bottom: 16px; z-index: 46; height: 36px; padding: 0 12px; border-radius: 12px; border: 1px solid var(--line); background: var(--surface); color: var(--ink);
+                    font-size: 12px; font-weight: 800; display: flex; align-items: center; gap: 6px; opacity: .85; cursor: pointer; }
+        #perf-btn:hover { opacity: 1; }
     </style>
 </head>
 
@@ -1268,6 +1315,7 @@
 
         /* ================= APERÇU 3D (téléphone + coque) ================= */
         const P3_T = 14; // épaisseur du téléphone en px
+        const P3_N = [14, 9, 6][(window.__PERF && __PERF.tier) || 0]; // nombre de tranches (moins = plus rapide)
         const P3 = { open: false, id: null, x: 0, y: 0, baseY: 0, auto: true, drag: false, snap: false,
                      resumeAt: 0, raf: 0, tok: 0, lx: 0, ly: 0, dt: 0, prof: null, list: [], bound: false };
         const P3_SUGGEST = [
@@ -1603,7 +1651,14 @@
 
         // Isole la coque : trouve la zone "dessin" de la photo (enlève cadre noir, table, fond), efface le trou de caméra
         // de la photo (haut gauche de la coque) et recadre au format du téléphone choisi.
-        function p3Prepare(url, img) {
+        const p3Q = []; let p3Busy = false;
+        function p3Pump() {
+            if (p3Busy || !p3Q.length) return; p3Busy = true;
+            const job = p3Q.shift(); job();
+            setTimeout(() => { p3Busy = false; p3Pump(); }, (window.__PERF && __PERF.tier) ? 220 : 90);
+        }
+        function p3Prepare(url, img, opt) {
+            opt = opt || {}; img.decoding = "async";
             const tok = img._ptok = (img._ptok || 0) + 1;
             const im = new Image();
             im.crossOrigin = "anonymous";
@@ -1614,7 +1669,8 @@
                     // --- 1) zone de la coque : cadrage central (cadre noir, table et fond retirés)
                     let sx = W * .14, sy = H * .08, sw = W * .70, sh = H * .74;
                     // --- 2) travail en haute qualité
-                    const sc = Math.min(1, 1400 / Math.max(sw, sh));
+                    const maxS = Math.round((opt.max || 1100) * [1, .8, .65][(window.__PERF && __PERF.tier) || 0]);
+                    const sc = Math.min(1, maxS / Math.max(sw, sh));
                     const cw0 = Math.round(sw * sc), ch0 = Math.round(sh * sc);
                     let cv = document.createElement("canvas"); cv.width = cw0; cv.height = ch0;
                     let cx = cv.getContext("2d", { willReadFrequently: true });
@@ -1655,9 +1711,10 @@
                     const ox = out.getContext("2d"); ox.imageSmoothingQuality = "high";
                     ox.drawImage(base, cl, ct, cw, ch, 0, 0, cw, ch);
                     if (tok === img._ptok) img.src = out.toDataURL("image/jpeg", 0.95);
-                } catch (e) { /* image protégée : on garde la photo telle quelle */ }
+                } catch (e) { if (tok === img._ptok) img.src = url; /* image protégée : on garde la photo telle quelle */ }
             };
-            im.src = url;
+            im.onerror = () => { if (tok === img._ptok) img.src = url; };
+            if (opt.queue) { p3Q.push(() => { im.src = url; }); p3Pump(); } else im.src = url;
         }
 
         function p3SetProduct(p) {
@@ -1756,7 +1813,7 @@
             const layers = document.getElementById("p3-layers");
             if (!layers.children.length) {
                 let h = "";
-                for (let i = 0; i <= P3_T; i++) h += `<div class="p3-layer" style="transform:translateZ(${i - P3_T / 2}px)"></div>`;
+                for (let i = 0; i <= P3_N; i++) h += `<div class="p3-layer" style="transform:translateZ(${((i - P3_N / 2) * P3_T / P3_N).toFixed(2)}px)"></div>`;
                 layers.innerHTML = h;
             }
             document.getElementById("p3-models").innerHTML = P3_SUGGEST.map((m) => `<option value="${esc(m)}"></option>`).join("");
@@ -1983,7 +2040,7 @@
             const defs = [[8, 12, 150, 300, 22, -10, 26, 30, -40], [78, 8, 120, 250, 28, 12, 20, -50, 30], [88, 58, 170, 340, 30, -14, 32, 40, -30], [4, 66, 130, 270, 24, 8, 26, -30, -50], [46, 80, 110, 230, 34, -6, 22, 50, -20], [58, 22, 90, 190, 26, 16, 28, -40, 40]];
             bg.innerHTML = defs.map(d => `<i style="left:${d[0]}%;top:${d[1]}%;width:${d[2]}px;height:${d[3]}px;--t:${d[4]}s;--rz:${d[5]}deg;--rx:${d[6]}deg;--dx:${d[7]}px;--dy:${d[8]}px"></i>`).join("");
             document.body.insertBefore(bg, document.body.firstChild);
-            if (!reduced) {
+            if (!reduced && __PERF.tier === 0) {
                 window.addEventListener("mousemove", (e) => { bg.style.perspectiveOrigin = (50 + (e.clientX / innerWidth - .5) * 30) + "% " + (50 + (e.clientY / innerHeight - .5) * 30) + "%"; }, { passive: true });
                 window.addEventListener("scroll", () => { bg.style.transform = `translateY(${-scrollY * .06}px)`; }, { passive: true });
             }
@@ -1997,13 +2054,13 @@
             { model: "Samsung S24 Ultra", x: -235, z: -150, ry: 32, s: .8 },
             { model: "Redmi Note 13 Pro", x: 235, z: -150, ry: -32, s: .8 }
         ];
-        const T = 14;
-        const phones = specs.map((sp) => {
+        const T = 14, TN = [14, 8, 5][__PERF.tier];
+        const phones = specs.slice(0, __PERF.tier >= 2 ? 1 : 3).map((sp) => {
             const prof = phoneProfile(sp.model);
             const el = document.createElement("div"); el.className = "h3-ph";
             el.style.cssText = `width:${prof.w}px;height:${prof.h}px;margin:${-prof.h / 2}px 0 0 ${-prof.w / 2}px;--r:${prof.r}px;--edge:#2a2530;--sx:50%`;
             let h = '<div style="position:absolute;inset:0;transform-style:preserve-3d">';
-            for (let i = 0; i <= T; i++) h += `<div class="p3-layer" style="transform:translateZ(${i - T / 2}px)"></div>`;
+            for (let i = 0; i <= TN; i++) h += `<div class="p3-layer" style="transform:translateZ(${((i - TN / 2) * T / TN).toFixed(2)}px)"></div>`;
             h += `<div class="p3-face" style="transform:translateZ(${T / 2}px);background:linear-gradient(135deg,var(--surface2),var(--surface))"><img alt="" draggable="false" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover"><div class="p3-shine"></div></div>`;
             h += `<div class="p3-face" style="transform:rotateY(180deg) translateZ(${T / 2}px);background:#0a0a0d">${p3FrontHTML(prof)}</div>`;
             h += `<div class="p3-cam">${p3CamHTML(prof)}</div></div>`;
@@ -2012,8 +2069,7 @@
         });
         const setImg = (ph, url) => {
             if (!url || ph.url === url) return; ph.url = url;
-            ph.img.src = url;
-            try { p3Prepare(url, ph.img); } catch (e) {}
+            try { p3Prepare(url, ph.img, { max: 640, queue: true }); } catch (e) { ph.img.src = url; }
         };
         // collections montrées : Anime + Sport par défaut, ou une seule, ou tout
         let mode = "as";
@@ -2054,18 +2110,19 @@
         apply();
         const poll = setInterval(() => { if (urls().length) { apply(); clearInterval(poll); } }, 700);
 
-        let spin = 0, spinCur = 0, px = 0, py = 0, tpx = 0, tpy = 0, vis = true, raf = 0;
+        let fc = 0, spin = 0, spinCur = 0, px = 0, py = 0, tpx = 0, tpy = 0, vis = true, raf = 0;
         root.addEventListener("pointermove", (e) => { const r = root.getBoundingClientRect(); tpx = ((e.clientX - r.left) / r.width - .5) * 2; tpy = ((e.clientY - r.top) / r.height - .5) * 2; });
         root.addEventListener("pointerleave", () => { tpx = 0; tpy = 0; });
         // un clic ou un toucher : tour complet + coque suivante
         const next = () => { spin += 360; setTimeout(() => { idx++; apply(); }, 420); };
         root.addEventListener("click", next);
-        if (!reduced) setInterval(() => { if (vis && !document.hidden) next(); }, 5200);
+        if (!reduced) setInterval(() => { if (vis && !document.hidden) next(); }, __PERF.tier ? 7000 : 5200);
 
         new IntersectionObserver((en) => { vis = en[0].isIntersecting; if (vis && !raf) raf = requestAnimationFrame(frame); }).observe(root);
         function frame(ts) {
             raf = 0; if (!vis) return;
             raf = requestAnimationFrame(frame);
+            if (__PERF.tier >= 1 && ((fc = (fc || 0) + 1) & 1)) return;
             const t = ts / 1000;
             px += (tpx - px) * .07; py += (tpy - py) * .07; spinCur += (spin - spinCur) * .07;
             const k = Math.min(1, root.clientWidth / 560);
@@ -2107,19 +2164,21 @@
 
         // --- particules reliées, attirées par la souris
         try {
-            if (!reduced) {
+            if (!reduced && __PERF.tier === 0) {
                 const cv = document.createElement("canvas"); cv.id = "fx-canvas"; document.body.insertBefore(cv, document.body.children[1] || null);
                 const cx = cv.getContext("2d"); let W = 0, H = 0, mx = -999, my = -999, col = "224,69,123", t0 = 0;
-                const N = innerWidth < 700 ? 34 : 72, P = [];
+                const N = innerWidth < 700 ? 26 : 46, P = [];
                 const size = () => { W = cv.width = innerWidth; H = cv.height = innerHeight; };
                 size(); addEventListener("resize", size);
                 for (let i = 0; i < N; i++) P.push({ x: Math.random() * W, y: Math.random() * H, vx: (Math.random() - .5) * .35, vy: (Math.random() - .5) * .35, r: Math.random() * 1.8 + .6 });
                 addEventListener("mousemove", (e) => { mx = e.clientX; my = e.clientY; }, { passive: true });
                 const getCol = () => { const c = getComputedStyle(document.documentElement).getPropertyValue("--accent2").trim(); const m = c.match(/^#([0-9a-f]{6})$/i); if (m) col = [0, 2, 4].map((k) => parseInt(m[1].substr(k, 2), 16)).join(","); };
                 getCol(); setInterval(getCol, 2500);
+                let fr = 0;
                 (function loop(ts) {
+                    if (__PERF.tier > 0) { cv.remove(); return; }
                     requestAnimationFrame(loop);
-                    if (document.hidden) return;
+                    if (document.hidden || (++fr & 1)) return;
                     cx.clearRect(0, 0, W, H);
                     for (const p of P) {
                         const dx = mx - p.x, dy = my - p.y, d = Math.hypot(dx, dy);
@@ -2138,7 +2197,7 @@
 
         // --- curseur personnalisé (souris uniquement)
         try {
-            if (!reduced && matchMedia("(hover:hover) and (pointer:fine)").matches) {
+            if (!reduced && __PERF.tier === 0 && matchMedia("(hover:hover) and (pointer:fine)").matches) {
                 const ring = document.createElement("div"), dot = document.createElement("div"); ring.id = "cur-ring"; dot.id = "cur-dot";
                 document.body.append(ring, dot);
                 let x = 0, y = 0, rx = 0, ry = 0;
@@ -2172,16 +2231,16 @@
             const wrap = $("#g3-wrap"), ring = $("#g3-ring");
             if (!wrap || !ring || typeof phoneProfile !== "function") return;
             const prof = phoneProfile("iPhone 15 Pro"), camHTML = `<div class="p3-cam">${p3CamHTML(prof)}</div>`;
-            let items = [], n = 0, R = 420, rot = 0, vel = reduced ? 0 : .14, drag = false, lx = 0, moved = 0, hover = false, tiltX = 0, tiltT = 0, built = "";
+            let gf = 0, items = [], n = 0, R = 420, rot = 0, vel = reduced ? 0 : .14, drag = false, lx = 0, moved = 0, hover = false, tiltX = 0, tiltT = 0, built = "";
             const build = () => {
                 const list = (typeof products !== "undefined" ? products : []).filter((p) => p.image_url);
                 const key = list.map((p) => p.id).join(",");
                 if (!list.length || key === built) return; built = key;
-                let use = list.slice(0, 14); while (use.length < 8) use = use.concat(list).slice(0, 8);
+                const cap = [12, 8, 6][__PERF.tier], minN = [8, 6, 5][__PERF.tier]; let use = list.slice(0, cap); while (use.length < minN) use = use.concat(list).slice(0, minN);
                 n = use.length; R = Math.max(360, Math.round(190 * n / 6.283 * 1.32));
                 ring.innerHTML = use.map((p, i) => `<div class="g3-card" data-id="${String(p.id).replace(/"/g, "")}" style="transform:rotateY(${i * 360 / n}deg) translateZ(${R}px)"><img class="art" alt="" draggable="false">${camHTML}<div class="g3-name">${(p.name || "").replace(/</g, "&lt;")}</div></div>`).join("");
                 items = [...ring.children];
-                items.forEach((el, i) => { const im = el.querySelector("img.art"); im.src = use[i].image_url; try { p3Prepare(use[i].image_url, im); } catch (e) {} });
+                items.forEach((el, i) => { const im = el.querySelector("img.art"); try { p3Prepare(use[i].image_url, im, { max: 380, queue: true }); } catch (e) { im.src = use[i].image_url; } });
             };
             build(); setInterval(build, 900);
             wrap.addEventListener("pointerdown", (e) => { drag = true; moved = 0; lx = e.clientX; wrap.classList.add("drag"); try { wrap.setPointerCapture(e.pointerId); } catch (err) {} });
@@ -2196,10 +2255,11 @@
             let vis = false; new IntersectionObserver((e) => { vis = e[0].isIntersecting; }).observe(wrap);
             (function loop() {
                 requestAnimationFrame(loop); if (!vis || !n) return;
+                if (__PERF.tier >= 2 && ((gf = (gf || 0) + 1) & 1)) return;
                 if (!drag) { const base = reduced ? 0 : (hover ? .04 : .14); vel += (base - vel) * .04; rot += vel; }
                 tiltX += (tiltT - tiltX) * .08;
                 ring.style.transform = `translateZ(${-R}px) rotateX(${tiltX}deg) rotateY(${rot}deg)`;
-                for (let i = 0; i < n; i++) { const a = (((i * 360 / n + rot) % 360) + 540) % 360 - 180, f = Math.abs(a) / 180; items[i].style.filter = `brightness(${(1 - f * .6).toFixed(2)})`; items[i].style.opacity = (1 - f * .35).toFixed(2); }
+                if (__PERF.tier === 0) for (let i = 0; i < n; i++) { const a = (((i * 360 / n + rot) % 360) + 540) % 360 - 180, f = Math.abs(a) / 180; items[i].style.filter = `brightness(${(1 - f * .6).toFixed(2)})`; items[i].style.opacity = (1 - f * .35).toFixed(2); }
             })();
         } catch (e) {}
     })();
@@ -2215,7 +2275,7 @@
         const img = art.querySelector("img"), steps = [...sec.querySelectorAll(".st-step")], dots = [...sec.querySelectorAll(".st-dots i")], labels = [...sec.querySelectorAll(".st-labels b")];
         // corps du téléphone : tranches + caméras
         const prof = (typeof phoneProfile === "function") ? phoneProfile("iPhone 15 Pro") : null;
-        let h = ""; for (let i = 0; i <= 10; i++) h += `<div class="p3-layer" style="transform:translateZ(${i - 5}px)"></div>`;
+        const SN = [10, 7, 5][__PERF.tier]; let h = ""; for (let i = 0; i <= SN; i++) h += `<div class="p3-layer" style="transform:translateZ(${((i - SN / 2) * 10 / SN).toFixed(2)}px)"></div>`;
         if (prof) h += `<div class="p3-cam" style="transform:translateZ(8px)">${p3CamHTML(prof)}</div>`;
         body.innerHTML = h;
         let url = "";
@@ -2223,7 +2283,7 @@
             const l = (typeof products !== "undefined" ? products : []).filter((p) => p.image_url);
             const u = l.length ? l[Math.min(1, l.length - 1)].image_url : "";
             if (!u) { if (!url) { url = "x"; img.src = "housscase_.jpg"; } return; }
-            if (u === url) return; url = u; img.src = u; try { p3Prepare(u, img); } catch (e) {}
+            if (u === url) return; url = u; try { p3Prepare(u, img, { max: 520, queue: true }); } catch (e) { img.src = u; }
         };
         setArt(); const poll = setInterval(() => { setArt(); if (url && url !== "x") clearInterval(poll); }, 800);
 
@@ -2253,6 +2313,40 @@
             const si = p < .3 ? 0 : p < .64 ? 1 : 2;
             if (si !== last) { last = si; steps.forEach((el, i) => el.classList.toggle("on", i === si)); dots.forEach((el, i) => el.classList.toggle("on", i === si)); }
         })();
+    })();
+    </script>
+
+    <script>
+    /* ===== Surveillance de la fluidité : si le site rame, il s'allège tout seul ===== */
+    (function () {
+        const P = window.__PERF; if (!P) return;
+        let frames = 0, t0 = 0, bad = 0, warm = true;
+        const save = (t) => { try { localStorage.setItem("perfTier", String(t)); } catch (e) {} };
+        function tick(ts) {
+            requestAnimationFrame(tick);
+            if (document.hidden) { t0 = 0; return; }
+            if (!t0) { t0 = ts; frames = 0; return; }
+            frames++;
+            if (ts - t0 >= 2000) {
+                const fps = frames * 1000 / (ts - t0); t0 = ts; frames = 0;
+                if (warm) { warm = false; return; }              // on ignore la première fenêtre (chargement des images)
+                const forced = (() => { try { return localStorage.getItem("perfForce"); } catch (e) { return null; } })();
+                if (forced !== null && forced !== "") return;
+                if (fps < 40 && P.tier < 2) { if (++bad >= 1) { bad = 0; P.set(P.tier + 1); save(P.tier); warm = true; } }
+                else bad = 0;
+            }
+        }
+        setTimeout(() => requestAnimationFrame(tick), 3500);
+        // bouton ⚡ : mode léger / automatique
+        const b = document.createElement("button"); b.id = "perf-btn"; b.type = "button"; b.setAttribute("aria-label", "Mode fluide");
+        const label = () => { let f = null; try { f = localStorage.getItem("perfForce"); } catch (e) {} b.textContent = (f === "2") ? "⚡ Mode léger : OUI" : "⚡ Mode léger"; };
+        label();
+        b.onclick = () => {
+            let f = null; try { f = localStorage.getItem("perfForce"); } catch (e) {}
+            try { if (f === "2") { localStorage.removeItem("perfForce"); localStorage.removeItem("perfTier"); } else { localStorage.setItem("perfForce", "2"); } } catch (e) {}
+            location.reload();
+        };
+        document.body.appendChild(b);
     })();
     </script>
 </body>
