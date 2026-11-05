@@ -92,7 +92,6 @@
             background: var(--bg);
             color: var(--ink);
             transition: background-color .5s ease, color .5s ease;
-            overflow-x: hidden;
         }
         ::selection { background: var(--accent2); color: #fff; }
 
@@ -394,12 +393,13 @@
         #g3-ring { position: absolute; left: 50%; top: 46%; width: 0; height: 0; transform-style: preserve-3d; }
         #g3-glow { position: absolute; left: 50%; bottom: 20px; width: 70%; height: 60px; margin-left: -35%; border-radius: 50%; pointer-events: none;
                    background: radial-gradient(ellipse, var(--glow), transparent 70%); filter: blur(14px); }
-        .g3-card { position: absolute; width: 190px; height: 390px; margin: -195px 0 0 -95px; border-radius: 32px; overflow: hidden; background: var(--surface2);
+        .g3-card { position: absolute; width: var(--cw, 190px); height: var(--ch, 390px); margin: calc(var(--ch, 390px) / -2) 0 0 calc(var(--cw, 190px) / -2); border-radius: 32px; overflow: hidden; background: var(--surface2);
                    border: 2px solid rgba(255,255,255,.28); box-shadow: 0 30px 60px -20px rgba(0,0,0,.65); }
         html:not(.perf-1):not(.perf-2) .g3-card { -webkit-box-reflect: below 10px linear-gradient(transparent 70%, rgba(255,255,255,.18)); }
         .g3-card img.art { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
         .g3-card::after { content: ""; position: absolute; inset: 0; pointer-events: none; background: linear-gradient(115deg, transparent 30%, rgba(255,255,255,.22) 48%, transparent 62%); background-size: 250% 100%; animation: g3shine 5s ease-in-out infinite; }
         @keyframes g3shine { 0%, 40% { background-position: 150% 0; } 100% { background-position: -100% 0; } }
+        .g3-card .p3-cam { transform: scale(var(--cs, 1)) translateZ(10px); transform-origin: 0 0; }
         .g3-card .g3-name { position: absolute; left: 0; right: 0; bottom: 0; padding: 26px 12px 12px; font-size: 12px; font-weight: 800; color: #fff; text-align: center;
                             background: linear-gradient(transparent, rgba(0,0,0,.72)); opacity: 0; transition: opacity .3s ease; }
         .g3-card:hover .g3-name { opacity: 1; }
@@ -466,12 +466,156 @@
         html.perf-1 .tilt > .w-14, html.perf-2 .tilt > .w-14, html.perf-1 .tilt > h3, html.perf-2 .tilt > h3 { transform: none !important; }
         html.perf-2 .float-a, html.perf-2 .float-b, html.perf-2 .grad-text, html.perf-2 .p3-cta::after, html.perf-2 .btn-shine::after, html.perf-2 #to-top.show, html.perf-2 #splash img { animation: none !important; }
         html.perf-2 .h3-ph:not(:first-child) { display: none !important; }
-        html.perf-2 #hero3d { height: 470px; }
-        html.perf-2 #g3-wrap { height: 470px; }
         html.perf-2 #p3-float, html.perf-2 #phone3d { will-change: auto; }
         #perf-btn { position: fixed; left: 14px; bottom: 16px; z-index: 46; height: 36px; padding: 0 12px; border-radius: 12px; border: 1px solid var(--line); background: var(--surface); color: var(--ink);
                     font-size: 12px; font-weight: 800; display: flex; align-items: center; gap: 6px; opacity: .85; cursor: pointer; }
         #perf-btn:hover { opacity: 1; }
+
+        /* =====================================================================
+           RESPONSIVE : mobile 320-480 / tablette 481-1024 / portable 1025-1440 / grand écran 1441+
+           ===================================================================== */
+        html, body { max-width: 100%; overflow-x: clip; }
+        img, video, canvas { max-width: 100%; }
+        .grid > *, .flex > * { min-width: 0; }
+        #collections > *, .h3-bar > *, #p3-thumbs > *, header .flex > *, .col-chip, .p3-thumb { flex-shrink: 0; min-width: auto; }
+        h1, h2, h3, p { overflow-wrap: anywhere; }
+        html { -webkit-text-size-adjust: 100%; }
+        .reveal.relative { max-width: 100%; }
+        #hero3d { overflow: visible; max-width: 100%; margin-inline: auto; }
+        html #hero3d { height: 540px; }
+        .h3-bar { max-width: 100%; overflow-x: auto; scrollbar-width: none; }
+        .h3-bar::-webkit-scrollbar { display: none; }
+        .h3-bar button { min-height: 40px; }
+
+        /* --- navigation mobile --- */
+        #menu-btn .bars { position: relative; width: 20px; height: 14px; display: block; }
+        #menu-btn .bars i { position: absolute; left: 0; width: 100%; height: 2px; border-radius: 2px; background: currentColor; transition: transform .4s cubic-bezier(.3,1.5,.5,1), opacity .25s, top .3s; }
+        #menu-btn .bars i:nth-child(1) { top: 0; } #menu-btn .bars i:nth-child(2) { top: 6px; } #menu-btn .bars i:nth-child(3) { top: 12px; }
+        #menu-btn[aria-expanded="true"] .bars i:nth-child(1) { top: 6px; transform: rotate(45deg); }
+        #menu-btn[aria-expanded="true"] .bars i:nth-child(2) { opacity: 0; transform: scaleX(0); }
+        #menu-btn[aria-expanded="true"] .bars i:nth-child(3) { top: 6px; transform: rotate(-45deg); }
+        #mobile-menu { position: absolute; left: 16px; right: 16px; top: calc(100% + 8px); padding: 10px; border-radius: 22px; border: 1px solid var(--line); display: flex; flex-direction: column; gap: 4px;
+                       background: color-mix(in srgb, var(--surface) 96%, transparent); box-shadow: var(--shadow); max-height: calc(100dvh - 110px); overflow-y: auto;
+                       opacity: 0; visibility: hidden; transform: perspective(900px) rotateX(-16deg) translateY(-12px); transform-origin: 50% 0; transition: opacity .3s ease, transform .5s cubic-bezier(.2,1.1,.3,1), visibility 0s .5s; }
+        #mobile-menu.open { opacity: 1; visibility: visible; transform: none; transition-delay: 0s; }
+        #mobile-menu a, #mobile-menu button { display: flex; align-items: center; gap: 14px; min-height: 52px; padding: 0 16px; border-radius: 14px; font-weight: 700; font-size: 16px; color: var(--ink); text-align: left; width: 100%;
+                                              opacity: 0; transform: translateX(-14px); transition: opacity .35s ease, transform .45s cubic-bezier(.2,1.1,.3,1), background .2s; }
+        #mobile-menu.open a, #mobile-menu.open button { opacity: 1; transform: none; }
+        #mobile-menu.open > *:nth-child(2) { transition-delay: .05s; } #mobile-menu.open > *:nth-child(3) { transition-delay: .1s; } #mobile-menu.open > *:nth-child(4) { transition-delay: .15s; }
+        #mobile-menu a:active, #mobile-menu button:active { background: var(--surface2); }
+        #mobile-menu i, #mobile-menu svg { color: var(--accent2); flex: none; }
+
+        /* --- tablette et mobile : une colonne --- */
+        @media (max-width: 1023px) {
+            .absolute.-inset-6 { inset: 0 !important; }
+            #hero3d { max-width: 640px; }
+            .float-a, .float-b { position: relative !important; left: auto !important; right: auto !important; top: auto !important; bottom: auto !important; display: inline-flex !important; margin: 14px 8px 0 0; animation: none !important; transform: none; }
+        }
+        @media (min-width: 641px) and (max-width: 1023px) {
+            html #hero3d { height: 500px; }
+            #products-container { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+            section.py-24 { padding-block: 4.5rem; }
+            #g3-wrap { height: 500px; }
+        }
+
+        @media (min-width: 1024px) and (max-width: 1240px) { .float-b { right: .2rem !important; } .float-a { left: .2rem !important; } }
+
+        /* --- mobile --- */
+        @media (max-width: 640px) {
+            section.py-24 { padding-block: 3.25rem; }
+            section.pt-40 { padding-top: 6.8rem; padding-bottom: 2.5rem; }
+            main h1 { font-size: clamp(2.25rem, 10.4vw, 3.4rem); line-height: 1.04; }
+            main section:first-child .text-lg { font-size: 1.02rem; }
+            main section:first-child .flex-wrap > a { width: 100%; justify-content: center; min-height: 54px; }
+            main section:first-child .max-w-md.grid { gap: .75rem; }
+            main section:first-child .max-w-md .text-3xl { font-size: 1.6rem; }
+            html #hero3d { height: 400px; }
+            .float-a, .float-b { display: flex !important; width: 100%; margin: 10px 0 0; }
+            #g3-wrap { height: 400px; }
+            .g3-card { border-radius: 24px; }
+            header > div:first-child { height: 3.5rem; }
+            header .font-script { font-size: 1.7rem; }
+            #nav { top: .6rem; padding-inline: .6rem; }
+            #mobile-menu { left: 10px; right: 10px; }
+            #collections .col-chip { min-height: 44px; }
+            #search { font-size: 16px; }
+            /* cartes produits compactes */
+            #products-container { gap: .7rem; }
+            article.card-glow { padding: .6rem; border-radius: 1.25rem; }
+            article.card-glow .aspect-square { aspect-ratio: 4 / 5; margin-bottom: .6rem; border-radius: 1rem; }
+            article.card-glow h3 { font-size: .9rem; line-height: 1.25; }
+            article.card-glow p.line-clamp-2 { display: none; }
+            article.card-glow .text-xl { font-size: 1rem; }
+            article.card-glow .pt-4 { padding-top: .6rem; gap: .4rem; }
+            article.card-glow button[aria-label="Ajouter au panier"] { width: 44px; height: 44px; border-radius: 14px; flex: none; }
+            article.card-glow button[aria-label^="Aper"] { font-size: 0; gap: 0; padding: 0; width: 38px; height: 38px; justify-content: center; bottom: .45rem; right: .45rem; }
+            article.card-glow button[aria-label^="Aper"] i, article.card-glow button[aria-label^="Aper"] svg { width: 18px; height: 18px; }
+            article.card-glow .absolute.top-3.left-3 { top: .45rem; left: .45rem; font-size: 10px; padding: 3px 8px; }
+            /* panier / commande */
+            #drawer-content { padding: 14px 14px calc(18px + env(safe-area-inset-bottom)); max-width: 100%; }
+            #cart-items button { min-width: 42px; min-height: 42px; }
+            #order-form input, #order-form .field { font-size: 16px; min-height: 50px; }
+            .dl-opt { min-height: 70px; }
+            #submit-btn { min-height: 56px; font-size: 16px; }
+            #wilaya-list { max-height: 46vh; } .wl-item { min-height: 46px; }
+            /* aperçu 3D */
+            #preview3d { padding: 0; align-items: flex-end; }
+            #preview3d > div:last-child { max-height: 96dvh; border-radius: 26px 26px 0 0; padding: 14px 14px calc(14px + env(safe-area-inset-bottom)); gap: 12px; }
+            html #stage3d { height: min(50dvh, 340px); touch-action: pan-y; }
+            #preview3d button[aria-label="Fermer"] { width: 44px; height: 44px; top: 8px; right: 8px; background: color-mix(in srgb, var(--surface) 85%, transparent); }
+            #p3-title { font-size: 1.3rem; } #p3-price { font-size: 1.25rem; }
+            #p3-model { font-size: 16px; }
+            #p3-add { position: sticky; bottom: 0; min-height: 56px; font-size: 16px; box-shadow: 0 -14px 24px -8px var(--bg); }
+            #p3-thumbs .p3-thumb { width: 3.4rem; height: 4.8rem; }
+            #toasts { width: calc(100vw - 20px); bottom: auto !important; top: 4.9rem; flex-direction: column-reverse; } .toast { max-width: 100%; font-size: 13px; }
+            /* boutons flottants */
+            #to-top { right: 12px; bottom: calc(14px + env(safe-area-inset-bottom)); width: 46px; height: 46px; }
+            #perf-btn { left: 10px; bottom: calc(14px + env(safe-area-inset-bottom)); width: 40px; height: 40px; padding: 0; font-size: 0; justify-content: center; }
+            #perf-btn::before { content: "⚡"; font-size: 17px; }
+            /* contact / pied de page */
+            #contact .p-10 { padding: 1.6rem 1.1rem; border-radius: 1.6rem; }
+            #contact .font-script { font-size: 1.7rem; }
+            #contact a.btn-shine { width: 100%; justify-content: center; min-height: 56px; }
+            footer { padding-bottom: 4.5rem; } footer .font-script { font-size: 2rem; }
+            /* histoire 3D */
+            .st-step h2 { font-size: clamp(1.6rem, 7.4vw, 2.1rem); } .st-step p { font-size: .95rem; line-height: 1.55; }
+            .st-cta { min-height: 52px; display: inline-flex; align-items: center; }
+        }
+        @media (max-width: 380px) {
+            #nav > div { padding-inline: .6rem; } #nav .flex.items-center.gap-2 { gap: .3rem; }
+            #nav a.group { gap: .5rem; } #nav a.group img { width: 2.1rem; height: 2.1rem; }
+            #nav button.w-11 { width: 2.5rem; height: 2.5rem; }
+            header .font-script { font-size: 1.45rem; }
+            main h1 { font-size: 2.1rem; }
+            .h3-bar button { padding: 7px 10px !important; font-size: 11px !important; }
+            #products-container { gap: .5rem; }
+            article.card-glow { padding: .5rem; }
+        }
+        @media (hover: none) and (pointer: coarse) {
+            button, a.btn-shine, .col-chip, .dl-opt { min-height: 44px; }
+            .p3-thumb { min-height: 0; }
+            #cursor-glow { display: none !important; }
+        }
+        @media (max-height: 520px) and (orientation: landscape) {
+            html #hero3d { height: 340px; } #g3-wrap { height: 340px; }
+            .st-sticky { height: 100svh; } #st-stage { height: 100%; transform: scale(.55); }
+            #preview3d > div:last-child { grid-template-columns: 1fr 1fr; max-height: 98dvh; }
+            html #stage3d { height: 78dvh; }
+        }
+        @supports (height: 100svh) { .st-sticky { height: 100svh; } }
+
+        /* --- portable / grand écran --- */
+        @media (min-width: 1536px) {
+            html { font-size: 17px; }
+            .max-w-6xl { max-width: 78rem; } .max-w-5xl { max-width: 68rem; } .max-w-4xl { max-width: 60rem; }
+            .st-sticky { max-width: 1320px; } #st-stage { height: 720px; }
+        }
+        @media (min-width: 1800px) {
+            html { font-size: 18px; }
+            #products-container { grid-template-columns: repeat(5, minmax(0, 1fr)); }
+            .max-w-6xl { max-width: 90rem; }
+        }
+        @media (min-width: 2400px) { html { font-size: 20px; } .max-w-6xl { max-width: 100rem; } }
     </style>
 </head>
 
@@ -509,6 +653,11 @@
                     <i data-lucide="moon" class="moon w-5 h-5"></i>
                 </button>
 
+                <button id="menu-btn" type="button" aria-label="Ouvrir le menu" aria-expanded="false" aria-controls="mobile-menu"
+                        class="md:hidden relative w-11 h-11 rounded-xl bg-surface2 border border-line text-accent flex items-center justify-center">
+                    <span class="bars"><i></i><i></i><i></i></span>
+                </button>
+
                 <button id="cart-btn" onclick="toggleCart()" aria-label="Ouvrir le panier"
                         class="relative w-11 h-11 rounded-xl bg-surface2 border border-line text-accent flex items-center justify-center hover:scale-105 active:scale-90 transition-transform">
                     <i data-lucide="shopping-bag" class="w-5 h-5"></i>
@@ -516,6 +665,12 @@
                           style="background: var(--accent2); color:#fff;">0</span>
                 </button>
             </div>
+        </div>
+        <div id="mobile-menu" class="md:hidden" role="menu" aria-hidden="true">
+            <a href="#about" role="menuitem"><i data-lucide="sparkles" class="w-5 h-5"></i> Pourquoi nous</a>
+            <a href="#shop" role="menuitem"><i data-lucide="layout-grid" class="w-5 h-5"></i> Catalogue</a>
+            <a href="#contact" role="menuitem"><i data-lucide="mail" class="w-5 h-5"></i> Contact</a>
+            <button type="button" role="menuitem" onclick="closeMenu(); toggleCart(true)"><i data-lucide="shopping-bag" class="w-5 h-5"></i> Mon panier</button>
         </div>
     </header>
 
@@ -667,7 +822,7 @@
 
                 <div id="collections" class="flex gap-2 overflow-x-auto md:flex-wrap md:overflow-visible pb-3 mb-6"></div>
 
-                <div id="products-container" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6"></div>
+                <div id="products-container" class="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-6"></div>
             </div>
         </section>
 
@@ -722,7 +877,7 @@
                         <input type="text" id="client-wilaya" placeholder="Wilaya (tape ex : Mosta...)" required autocomplete="off"
                                oninput="onWilayaInput()" onfocus="openWilayaList()" onkeydown="onWilayaKey(event)"
                                class="field w-full pl-11 pr-4 py-3 rounded-xl text-sm">
-                        <div id="wilaya-list" class="hidden absolute bottom-full left-0 right-0 mb-2 max-h-56 overflow-y-auto rounded-xl border border-line z-20"
+                        <div id="wilaya-list" class="hidden absolute top-full left-0 right-0 mt-2 max-h-56 overflow-y-auto rounded-xl border border-line z-20"
                              style="background: var(--surface); box-shadow: var(--shadow);"></div>
                     </div>
 
@@ -1129,6 +1284,7 @@
             wlActive = 0;
             renderWilayaList();
             document.getElementById("wilaya-list").classList.remove("hidden");
+            try { setTimeout(() => document.getElementById("wilaya-box").scrollIntoView({ block: "center", behavior: "smooth" }), 60); } catch (e) {}
         }
         function closeWilayaList() { document.getElementById("wilaya-list").classList.add("hidden"); }
 
@@ -2095,7 +2251,7 @@
         };
         // sélecteur de collection sous les téléphones
         const bar = document.createElement("div");
-        bar.style.cssText = "position:absolute;left:50%;bottom:-6px;transform:translateX(-50%);z-index:6;display:flex;gap:8px;padding:6px;border-radius:99px;border:1px solid var(--line);background:color-mix(in srgb, var(--surface) 82%, transparent);backdrop-filter:blur(14px)";
+        bar.className = "h3-bar"; bar.style.cssText = "position:absolute;left:50%;bottom:-6px;transform:translateX(-50%);z-index:6;display:flex;gap:8px;padding:6px;border-radius:99px;border:1px solid var(--line);background:color-mix(in srgb, var(--surface) 82%, transparent);backdrop-filter:blur(14px)";
         [["as", "Anime + Sport"], ["Anime", "Anime"], ["Sport", "Sport"], ["all", "Tout"]].forEach(([m, label]) => {
             const b = document.createElement("button"); b.type = "button"; b.textContent = label; b.dataset.m = m;
             b.style.cssText = "padding:7px 14px;border-radius:99px;font-size:12px;font-weight:800;white-space:nowrap;transition:all .3s cubic-bezier(.3,1.6,.5,1);color:var(--ink)";
@@ -2125,8 +2281,10 @@
             if (__PERF.tier >= 1 && ((fc = (fc || 0) + 1) & 1)) return;
             const t = ts / 1000;
             px += (tpx - px) * .07; py += (tpy - py) * .07; spinCur += (spin - spinCur) * .07;
-            const k = Math.min(1, root.clientWidth / 560);
-            const sy = Math.min(1, Math.max(0, scrollY / 650));
+            const Wd = root.clientWidth, Ht = root.clientHeight, narrow = Wd < 640;
+            const k = narrow ? Math.min(1, Ht / 540, Wd / 270) : Math.min(1, Wd / 640, Ht / 500);
+            phones.forEach((ph) => { const d = (narrow && !ph.sp.main) ? "none" : ""; if (ph.el.style.display !== d) ph.el.style.display = d; });
+            const rt = root.getBoundingClientRect().top, sy = Math.min(1, Math.max(0, (-rt + 40) / Math.max(420, root.clientHeight * 1.1)));
             stage.style.transform = `translateY(${sy * 60}px) scale(${k * (1 - sy * .22)}) rotateX(${py * -6 + Math.sin(t * .4) * 2 + sy * 18}deg) rotateY(${sy * 55}deg) translateZ(${-sy * 220}px)`;
             stage.style.opacity = String(1 - sy * .55);
             phones.forEach((ph, i) => {
@@ -2230,6 +2388,7 @@
         try {
             const wrap = $("#g3-wrap"), ring = $("#g3-ring");
             if (!wrap || !ring || typeof phoneProfile !== "function") return;
+            const cwNow = () => (wrap.clientWidth < 520 ? 138 : wrap.clientWidth < 900 ? 164 : 190);
             const prof = phoneProfile("iPhone 15 Pro"), camHTML = `<div class="p3-cam">${p3CamHTML(prof)}</div>`;
             let gf = 0, items = [], n = 0, R = 420, rot = 0, vel = reduced ? 0 : .14, drag = false, lx = 0, moved = 0, hover = false, tiltX = 0, tiltT = 0, built = "";
             const build = () => {
@@ -2237,12 +2396,14 @@
                 const key = list.map((p) => p.id).join(",");
                 if (!list.length || key === built) return; built = key;
                 const cap = [12, 8, 6][__PERF.tier], minN = [8, 6, 5][__PERF.tier]; let use = list.slice(0, cap); while (use.length < minN) use = use.concat(list).slice(0, minN);
-                n = use.length; R = Math.max(360, Math.round(190 * n / 6.283 * 1.32));
+                const cw = cwNow(); wrap.style.setProperty("--cw", cw + "px"); wrap.style.setProperty("--ch", Math.round(cw * 2.05) + "px"); wrap.style.setProperty("--cs", (cw / 190).toFixed(3));
+                n = use.length; R = Math.max(Math.round(cw * 1.9), Math.round(cw * n / 6.283 * 1.32));
                 ring.innerHTML = use.map((p, i) => `<div class="g3-card" data-id="${String(p.id).replace(/"/g, "")}" style="transform:rotateY(${i * 360 / n}deg) translateZ(${R}px)"><img class="art" alt="" draggable="false">${camHTML}<div class="g3-name">${(p.name || "").replace(/</g, "&lt;")}</div></div>`).join("");
                 items = [...ring.children];
                 items.forEach((el, i) => { const im = el.querySelector("img.art"); try { p3Prepare(use[i].image_url, im, { max: 380, queue: true }); } catch (e) { im.src = use[i].image_url; } });
             };
             build(); setInterval(build, 900);
+            let lastCw = cwNow(); addEventListener("resize", () => { const c = cwNow(); if (c !== lastCw) { lastCw = c; built = ""; build(); } });
             wrap.addEventListener("pointerdown", (e) => { drag = true; moved = 0; lx = e.clientX; wrap.classList.add("drag"); try { wrap.setPointerCapture(e.pointerId); } catch (err) {} });
             wrap.addEventListener("pointermove", (e) => {
                 const r = wrap.getBoundingClientRect(); tiltT = -((e.clientY - r.top) / r.height - .5) * 14;
@@ -2347,6 +2508,21 @@
             location.reload();
         };
         document.body.appendChild(b);
+    })();
+    </script>
+
+    <script>
+    /* ===== Menu mobile ===== */
+    (function () {
+        const btn = document.getElementById("menu-btn"), menu = document.getElementById("mobile-menu"); if (!btn || !menu) return;
+        window.closeMenu = () => { menu.classList.remove("open"); btn.setAttribute("aria-expanded", "false"); menu.setAttribute("aria-hidden", "true"); btn.setAttribute("aria-label", "Ouvrir le menu"); };
+        const open = () => { menu.classList.add("open"); btn.setAttribute("aria-expanded", "true"); menu.setAttribute("aria-hidden", "false"); btn.setAttribute("aria-label", "Fermer le menu"); try { lucide.createIcons(); } catch (e) {} };
+        btn.addEventListener("click", (e) => { e.stopPropagation(); menu.classList.contains("open") ? closeMenu() : open(); });
+        menu.addEventListener("click", (e) => { if (e.target.closest("a")) closeMenu(); });
+        document.addEventListener("click", (e) => { if (menu.classList.contains("open") && !e.target.closest("#mobile-menu, #menu-btn")) closeMenu(); });
+        document.addEventListener("keydown", (e) => { if (e.key === "Escape") closeMenu(); });
+        window.addEventListener("resize", () => { if (innerWidth >= 768) closeMenu(); });
+        window.addEventListener("scroll", () => { if (menu.classList.contains("open") && scrollY > 80) closeMenu(); }, { passive: true });
     })();
     </script>
 </body>
